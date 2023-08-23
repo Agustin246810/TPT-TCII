@@ -19,7 +19,7 @@ int main(void)
 	return 0;
 }
 
-void showAF(tData AF)
+void showAF(tData AF) //Aasdklasdjklas
 {
 	tData Q, sigma, delta, q0, F;
 

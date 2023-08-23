@@ -7,6 +7,7 @@
 void showAF(tData AF);
 char *leeCad();
 tData ConversionAFD(tData AFND);
+tData CopyData(tData data);
 
 int main(void)
 {
@@ -114,7 +115,7 @@ tData ConversionAFD(tData AFND)
 
 	tData initialStateD = newNestedData(initialStateND, SET);
 	tData stateSetD = newNestedData(initialStateD, SET);
-	tData sigmaD = sigmaND;
+	tData sigmaD = CopyData(sigmaND);
 	tData transitionsD = newData("{}");
 	tData acceptanceStatesD = newData("{}");
 
@@ -153,16 +154,16 @@ tData ConversionAFD(tData AFND)
 
 			newTransition = newData("[]");
 
-			PUSH(newTransition, returnElem(stateSetD, positionInQb)); // TODO: deberia meter una copia del elemento
-			PUSH(newTransition, returnElem(sigmaND, positionInSigmaND));
-			PUSH(newTransition, partialState); // Aquí si se guarda el partialState que no es usado en otra parte del AF
+			PUSH(newTransition, CopyData(returnElem(stateSetD, positionInQb))); // TODO: deberia meter una copia del elemento
+			PUSH(newTransition, CopyData(returnElem(sigmaND, positionInSigmaND)));
+			PUSH(newTransition, CopyData(partialState));
 
 			aux1 = newNestedData(newTransition, SET);
-			// dataFree(&newTransition);
+			dataFree(&newTransition);
 			newTransition = NULL;
 			aux2 = UNION(transitionsD, aux1);
-			// dataFree(&transitionsD);
-			// dataFree(&aux1);
+			dataFree(&transitionsD);
+			dataFree(&aux1);
 			transitionsD = aux2;
 			aux2 = NULL;
 			aux1 = NULL;
@@ -170,11 +171,11 @@ tData ConversionAFD(tData AFND)
 			if (!IN(stateSetD, partialState))
 			{
 				aux1 = newNestedData(partialState, SET);
-				// dataFree(&partialState);
+				dataFree(&partialState);
 				partialState = aux1;
 
 				aux1 = UNION(stateSetD, partialState);
-				// dataFree(&stateSetD);
+				dataFree(&stateSetD);
 				stateSetD = aux1;
 				aux1 = NULL;
 			}
@@ -189,25 +190,18 @@ tData ConversionAFD(tData AFND)
 	{
 		aux1 = INTER(returnElem(stateSetD, positionInQb), acceptanceStatesND);
 
-		// printf("\n");
-		// printData(aux1);
-		// printf("\n");
-
 		if (!isEmpty(aux1))
 		{
-			// dataFree(&aux1);
+			dataFree(&aux1);
 			aux1 = newNestedData(returnElem(stateSetD, positionInQb), SET);
 			aux2 = UNION(acceptanceStatesD, aux1);
-			// printf("\n");
-			// printData(aux1);
-			// printf("\n");
 
-			// dataFree(&acceptanceStatesD);
+			dataFree(&acceptanceStatesD);
 			acceptanceStatesD = aux2;
 			aux2 = NULL;
 		}
 
-		// dataFree(&aux1);
+		dataFree(&aux1);
 	}
 
 	PUSH(AFD, stateSetD);
@@ -238,8 +232,8 @@ tData ConversionAFD(tData AFND)
 
 	// int position = 1;
 
-	// alphabet = alphabetND; // TODO: CopyDataType
-	// initialState = newNestedData(newData(toStr(initialStateND)), SET); // TODO: Dar vuelta
+	// alphabet = alphabetND;
+	// initialState = newNestedData(newData(toStr(initialStateND)), SET);
 	// stateSet = newNestedData(initialState, SET);
 	// transitions = newData("{}");
 	// acceptanceStates = newData("{}");
@@ -334,4 +328,12 @@ tData ConversionAFD(tData AFND)
 	// dataFree(&acceptanceStates);
 
 	// return AFD;
+}
+
+// Devuelve la copia de un tData
+tData CopyData(tData data)
+{
+	tData copy = newNestedData(data, LIST);
+
+	return returnElem(copy, 1);
 }

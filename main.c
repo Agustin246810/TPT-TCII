@@ -125,19 +125,19 @@ tData ConversionAFD(tData AFND)
 	tData partialState;
 	tData newTransition;
 
-	int positionInQb = 1;
+	int positionInStateSetD = 1;
 
-	while (positionInQb <= CARDINAL(stateSetD))
+	while (positionInStateSetD <= CARDINAL(stateSetD))
 	{
 		for (int positionInSigmaND = 1; positionInSigmaND <= CARDINAL(sigmaND); positionInSigmaND++)
 		{
 			partialState = newData("{}");
 
-			for (int positionInStateD = 1; positionInStateD <= CARDINAL(returnElem(stateSetD, positionInQb)); positionInStateD++)
+			for (int positionInStateD = 1; positionInStateD <= CARDINAL(returnElem(stateSetD, positionInStateSetD)); positionInStateD++)
 			{
 				for (int positionInTransitionsND = 1; positionInTransitionsND <= CARDINAL(transitionsND); positionInTransitionsND++)
 				{
-					if (isEqual(returnElem(returnElem(stateSetD, positionInQb), positionInStateD), returnElem(returnElem(transitionsND, positionInTransitionsND), 1)))
+					if (isEqual(returnElem(returnElem(stateSetD, positionInStateSetD), positionInStateD), returnElem(returnElem(transitionsND, positionInTransitionsND), 1)))
 					{
 						if (isEqual(returnElem(sigmaND, positionInSigmaND), returnElem(returnElem(transitionsND, positionInTransitionsND), 2)))
 						{
@@ -154,7 +154,7 @@ tData ConversionAFD(tData AFND)
 
 			newTransition = newData("[]");
 
-			PUSH(newTransition, CopyData(returnElem(stateSetD, positionInQb))); // TODO: deberia meter una copia del elemento
+			PUSH(newTransition, CopyData(returnElem(stateSetD, positionInStateSetD)));
 			PUSH(newTransition, CopyData(returnElem(sigmaND, positionInSigmaND)));
 			PUSH(newTransition, CopyData(partialState));
 
@@ -183,17 +183,17 @@ tData ConversionAFD(tData AFND)
 			partialState = NULL;
 		}
 
-		positionInQb++;
+		positionInStateSetD++;
 	}
 
-	for (int positionInQb = 1; positionInQb <= CARDINAL(stateSetD); positionInQb++)
+	for (int positionInStateSetD = 1; positionInStateSetD <= CARDINAL(stateSetD); positionInStateSetD++)
 	{
-		aux1 = INTER(returnElem(stateSetD, positionInQb), acceptanceStatesND);
+		aux1 = INTER(returnElem(stateSetD, positionInStateSetD), acceptanceStatesND);
 
 		if (!isEmpty(aux1))
 		{
 			dataFree(&aux1);
-			aux1 = newNestedData(returnElem(stateSetD, positionInQb), SET);
+			aux1 = newNestedData(returnElem(stateSetD, positionInStateSetD), SET);
 			aux2 = UNION(acceptanceStatesD, aux1);
 
 			dataFree(&acceptanceStatesD);
@@ -211,123 +211,6 @@ tData ConversionAFD(tData AFND)
 	PUSH(AFD, acceptanceStatesD);
 
 	return AFD;
-
-	// tData acceptanceStatesND = returnElem(AFND, 5);
-	// tData stateSetND = returnElem(AFND, 1);
-	// tData alphabetND = returnElem(AFND, 2);
-	// tData transitionsND = returnElem(AFND, 3);
-	// tData initialStateND = returnElem(AFND, 4);
-	// tData acceptanceStatesND = returnElem(AFND, 5);
-
-	// tData AFD = newData("[]");
-	// tData stateSet = NULL;
-	// tData alphabet = NULL;
-	// tData transitions = NULL;
-	// tData initialState = NULL;
-	// tData acceptanceStates = NULL;
-
-	// tData partialState = NULL; // DataType usado para ir haciendo la union de conjuntos de estados
-	// tData aux1 = NULL;				 // DataType usado para ir liberando la memoria innecesaria
-	// tData aux2 = NULL;				 // DataType usado para ir liberando la memoria innecesaria
-
-	// int position = 1;
-
-	// alphabet = alphabetND;
-	// initialState = newNestedData(newData(toStr(initialStateND)), SET);
-	// stateSet = newNestedData(initialState, SET);
-	// transitions = newData("{}");
-	// acceptanceStates = newData("{}");
-
-	// while (position <= CARDINAL(stateSet)) // Recorremos todos los elementos del conjunto de estados
-	// {																			 // del AFD a medida que se van agregando nuevos.
-
-	// 	for (int i = 1; i <= CARDINAL(alphabet); i++) // Recorremos el alfabeto para definir todas
-	// 	{																							// las transiciones con cada caracter.
-
-	// 		partialState = newData("{}");
-
-	// 		for (int j = 1; j <= CARDINAL(returnElem(stateSet, position)); j++) // Recorremos el estado en la posicion n ya que
-	// 		{																																		// dicho estado es un conjunto de estados del AFND.
-
-	// 			for (int k = 1; k <= CARDINAL(transitionsND); k++) // Recorremos las transiciones hasta encontrar la que
-	// 			{																									 // encaja con el estado y el caracter del alfabeto.
-
-	// 				if (strcmp(toStr(returnElem(returnElem(transitionsND, k), 1)), toStr(returnElem(returnElem(stateSet, position), j))) == 0) // Comparamos el estado
-	// 				{
-	// 					if (strcmp(toStr(returnElem(returnElem(transitionsND, k), 2)), toStr(returnElem(alphabet, i))) == 0) // Comparamos el caracter
-	// 					{
-	// 						aux1 = returnElem(returnElem(transitionsND, k), 3);
-	// 						aux2 = UNION(aux1, partialState);
-	// 						dataFree(&partialState);
-	// 						partialState = aux2;
-	// 						aux1 = NULL;
-	// 						aux2 = NULL;
-	// 						break;
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-
-	// 		aux1 = newData("[]");
-	// 		PUSH(aux1, returnElem(stateSet, position));
-	// 		PUSH(aux1, returnElem(alphabet, i));
-	// 		PUSH(aux1, partialState);
-
-	// 		aux2 = newNestedData(aux1, SET);
-	// 		dataFree(&aux1);
-	// 		aux1 = UNION(transitions, aux2); // Agregamos la transicion al conjunto de transiciones
-	// 		dataFree(&transitions);
-	// 		transitions = aux1;
-	// 		aux1 = NULL;
-
-	// 		if (!IN(stateSet, partialState)) // Si el estado no esta (es nuevo), lo agregamos.
-	// 		{
-	// 			aux1 = newNestedData(partialState, SET);
-	// 			dataFree(&partialState);
-	// 			partialState = aux1;
-
-	// 			aux1 = UNION(stateSet, partialState);
-	// 			dataFree(&stateSet);
-	// 			stateSet = aux1;
-	// 			aux1 = NULL;
-	// 		}
-
-	// 		dataFree(&partialState);
-	// 	}
-
-	// 	position++;
-	// }
-
-	// for (int i = 1; i <= CARDINAL(stateSet); i++)
-	// {
-	// 	aux1 = INTER(returnElem(stateSet, i), acceptanceStatesND);
-
-	// 	if (!isEmpty(aux1)) // Si la interseccion entre un estado del AFD y el conjunto de estados de aceptacion del AFND
-	// 	{										// es distinta de vacio, se agrega dicho estado al conj. de estados de aceptacion del AFD
-	// 		dataFree(&aux1);
-	// 		aux1 = newNestedData(returnElem(stateSet, i), SET);
-	// 		aux2 = UNION(acceptanceStates, aux1);
-	// 		dataFree(&acceptanceStates);
-	// 		acceptanceStates = aux2;
-	// 		aux2 = NULL;
-	// 	}
-
-	// 	dataFree(&aux1);
-	// }
-
-	// PUSH(AFD, stateSet);
-	// PUSH(AFD, alphabet);
-	// PUSH(AFD, transitions);
-	// PUSH(AFD, initialState);
-	// PUSH(AFD, acceptanceStates);
-
-	// dataFree(&stateSet);
-	// dataFree(&alphabet);
-	// dataFree(&transitions);
-	// dataFree(&initialState);
-	// dataFree(&acceptanceStates);
-
-	// return AFD;
 }
 
 // Devuelve la copia de un tData

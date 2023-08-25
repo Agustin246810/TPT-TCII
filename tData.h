@@ -31,6 +31,8 @@ void printData(tData d);
 int returnType(tData d);
 //convierte tData a cadena
 char* toStr(tData d);
+//copia un tData en otro tData
+tData copyData(tData d);
 
 /*operaciones con SET y LIST*/
 /*Retorna elemento en posición pos dentro del SLData*/

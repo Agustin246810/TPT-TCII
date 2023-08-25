@@ -4,10 +4,11 @@
 #include <string.h>
 #include <tData.h>
 
+// [{q0,q1,q2,q3,q4,q5},{0,1},{[q0,0,{q0}],[q0,1,{q0,q1,q2}],[q1,0,{q2,q3}],[q1,1,{}],[q2,0,{}],[q2,1,{q4}],[q3,0,{q5}],[q3,1,{}],[q4,0,{}],[q4,1,{q5}],[q5,0,{q5}],[q5,1,{q5}]},q0,{q5}]
+
 void showAF(tData AF);
 char *leeCad();
 tData ConversionAFD(tData AFND);
-tData CopyData(tData data);
 
 int main(void)
 {
@@ -115,7 +116,7 @@ tData ConversionAFD(tData AFND)
 
 	tData initialStateD = newNestedData(initialStateND, SET);
 	tData stateSetD = newNestedData(initialStateD, SET);
-	tData sigmaD = CopyData(sigmaND);
+	tData sigmaD = copyData(sigmaND);
 	tData transitionsD = newData("{}");
 	tData acceptanceStatesD = newData("{}");
 
@@ -154,9 +155,9 @@ tData ConversionAFD(tData AFND)
 
 			newTransition = newData("[]");
 
-			PUSH(newTransition, CopyData(returnElem(stateSetD, positionInStateSetD)));
-			PUSH(newTransition, CopyData(returnElem(sigmaND, positionInSigmaND)));
-			PUSH(newTransition, CopyData(partialState));
+			PUSH(newTransition, copyData(returnElem(stateSetD, positionInStateSetD)));
+			PUSH(newTransition, copyData(returnElem(sigmaND, positionInSigmaND)));
+			PUSH(newTransition, copyData(partialState));
 
 			aux1 = newNestedData(newTransition, SET);
 			dataFree(&newTransition);
@@ -211,12 +212,4 @@ tData ConversionAFD(tData AFND)
 	PUSH(AFD, acceptanceStatesD);
 
 	return AFD;
-}
-
-// Devuelve la copia de un tData
-tData CopyData(tData data)
-{
-	tData copy = newNestedData(data, LIST);
-
-	return returnElem(copy, 1);
 }

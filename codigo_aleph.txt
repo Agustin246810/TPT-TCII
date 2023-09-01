@@ -1,0 +1,43 @@
+
+list afnd2afd(list A){
+    set Delta = A[3];
+    set F = A[5];
+    set Sigma = A[2]
+
+    set QB= {{A[4]}};
+    set DeltaB= {};
+    set FB= {};
+
+    foreach R in QB{            //El foreach no tendria que recorrer desde 0 el conjunto en cada iteracion
+       
+        foreach a in Sigma{
+            list new_trans = [R,a,{}];
+            set new_q = {};
+
+            foreach q in R{
+                
+                foreach T in Delta{
+                    if ((q in T) && (a in T))  //pregunto si q pertenece a T y tambien si a pertenece a T
+                        new_q = new_q | T[3];  
+                }
+            }
+
+            new_trans[3] = new_q;   //meto el nuevo estado en la transicion
+            DeltaB= DeltaB | {new_q};  //meto la transicion en el DeltaB
+            QB = QB | {new_q};  //añado el nuevo estado
+        }
+
+    }
+
+    foreach S in QB{
+        if((S & F) != {})  //Compara con el vacio
+            FB= FB | {S};
+    }
+
+    return [QB, Sigma, DeltaB, {A[4]}, FB];
+}
+
+
+
+//Pensar que hacer si tenemos una lista por ej A= [1,2,3] y si podemos hacer A[3]= 4 tendriamos A=[1,2,4]
+//pero que pasaria si A[5], opcion 1: A=[5] -> [1,2,4,0,5] o -> error

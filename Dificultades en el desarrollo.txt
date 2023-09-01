@@ -1,3 +1,0 @@
-La principal dificultad que se encuentra a la hora de desarrollar el programa es debido a que el lenguaje no está pensado para este tipo de problemática.
-Se complica mucho la escritura por la falta de estructuras de control que permitan trabajar fácilmente con conjuntos y listas, por ejemplo una que permita hacer algo con cada elemento de un conjunto u otra que permita sobrescribir un conjunto con su union con otro sin tener que realizar manualmente la liberación de memoria.
-Además la lectura del código es muy complicada por el tema de los parámetros anidados cuando se quiere referenciar por ejemplo a un elemento dentro de un conjunto, dentro de una lista.

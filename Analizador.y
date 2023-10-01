@@ -6,62 +6,71 @@
 %}
 
 /* Se definen los tokens */
-%token IF ELSE WHILE FOREACH ELEM SET LIST POP PUSH TO IN ID AND OR NOT ISEQUAL NOTEQUAL UNION INTERS DIFF
+%token IF ELSE WHILE FOREACH ELEM SET LIST POP PUSH TO ID IN
 
 /* Especificamos la variable inicial */
 %start init
 
-%left AND OR
-%left ISEQUAL NOTEQUAL
-%left UNION INTERS DIFF
+%left ','
+%left ';'
+
+%left UNION
+%left INTERS
+%left DIFF
+
+%left NOT
+%left AND
+%left OR
+%left ISEQUAL
+%left NOTEQUAL
 
 %%
   init
-    : if
+    : if ';'
     {
       printf("\nSentencia IF escrita correctamente");
     }
 
-    | while
+    | while ';'
     {
       printf("\nSentencia WHILE escrita correctamente");
     }
 
-    | foreach
+    | foreach ';'
     {
       printf("\nSentencia FOREACH escrita correctamente");
     }
 
-    | definition
+    | definition ';'
     {
       printf("\nSentencia DEFINICION escrita correctamente");
     }
 
-    | assignment
+    | assignment ';'
     {
       printf("\nSentencia ASIGNACION escrita correctamente");
     }
 
-    | multiAssignment
+    | multiAssignment ';'
     {
       printf("\nSentencia ASIGNACION MULTIPLE escrita correctamente");
     }
 
-    | push
+    | push ';'
     {
       printf("\nSentencia PUSH escrita correctamente");
     }
 
-    | pop
+    | pop ';'
     {
       printf("\nSentencia POP escrita correctamente");
     }
   ;
 
+  /* no admite definicion de tipo elem */
   definition
     : SET ID
     | LIST ID
-    | ELEM ID
   ;
 
   if
@@ -81,6 +90,8 @@
     | definition
     | assignment
     | multiAssignment
+    | pop
+    | push
   ;
 
   logicExpression
@@ -114,10 +125,12 @@
 
   while
     : WHILE '(' logicExpression ')' '{' statementList '}'
+    | WHILE '(' logicExpression ')' '{' '}'
   ;
 
   foreach
-    : FOREACH ID IN set '{' statementList '}'
+    : FOREACH ID IN expression '{' statementList '}'
+    | FOREACH ID IN expression '{' '}'
   ;
 
   assignment
@@ -144,8 +157,8 @@
 
   /* No admite lista de expresiones vacia */
   expressionList
-    : expression
-    | expression ',' expressionList
+    : expression ',' expressionList
+    | expression
   ;
   
   set
@@ -154,7 +167,6 @@
     | union
     | inters
     | diff
-    | ID
   ;
 
   union
@@ -172,7 +184,6 @@
   list
     : '[' ']'
     | '[' expressionList ']'
-    | ID
   ;
 
   pop

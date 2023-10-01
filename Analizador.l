@@ -17,16 +17,16 @@ enum yytokentype {
   POP = 265,
   PUSH = 266,
   TO = 267,
-  IN = 268,
-  ID = 269,
-  EOL = 270,
-  ISEQUAL = 271,
-  NOTEQUAL = 272,
-  AND = 273,
-  OR = 274,
-  UNION = 275,
-  INTERS = 276,
-  DIFF = 277
+  ID = 268,
+  IN = 269,
+  UNION = 270,
+  INTERS = 271,
+  DIFF = 272,
+  NOT = 273,
+  AND = 274,
+  OR = 275,
+  ISEQUAL = 276,
+  NOTEQUAL = 277
 };
 
 %}
@@ -48,9 +48,10 @@ enum yytokentype {
 "to"                        { return TO; }
 "in"                        { return IN; }
 "=="                        { return ISEQUAL; }
-"=!"                        { return NOTEQUAL; }
+"!="                        { return NOTEQUAL; }
 "&&"                        { return AND; }
 "||"                        { return OR; }
+"!"                         { return NOT; }
 
 "|"                         { return UNION; }
 "&"                         { return INTERS; }
@@ -59,19 +60,19 @@ enum yytokentype {
 ("'")([a-zA-Z0-9]+)         { return ELEM; }
 ([a-zA-z])([a-zA-Z0-9]*)    { return ID; }
 
-"{" |
-"}" |
 "[" |
 "]" |
+"{" |
+"}" |
 "(" |
 ")" |
 "," |
 ";" |
 "="                         { return yytext[0]; }
 
-"\n"                        { return EOL; }
+"\n"                        { /* Ignora saltos de linea */ }
 "//".*                      { /* Ignora comentarios */ }
 [ \t]                       { /* Ignora espacios en blanco */ }
-.                           yyerror("\nERROR Caracter Desconocido");
+.                           yyerror(yytext);
 
 %%

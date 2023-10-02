@@ -33,25 +33,25 @@ enum yytokentype {
 
 %%
 
-"if"                        { printf("\nToken: IF"); }
-"else"                      { printf("\nToken: ELSE"); }
-"while"                     { printf("\nToken: WHILE"); }
-"foreach"                   { printf("\nToken: FOREACH"); }
-"set"                       { printf("\nToken: SET"); }
-"list"                      { printf("\nToken: LIST"); }
-"pop"                       { printf("\nToken: POP"); }
-"push"                      { printf("\nToken: PUSH"); }
-"to"                        { printf("\nToken: TO"); }
-"in"                        { printf("\nToken: IN"); }
-"=="                        { printf("\nToken: ISEQUAL"); }
-"!="                        { printf("\nToken: NOTEQUAL"); }
-"&&"                        { printf("\nToken: AND"); }
-"||"                        { printf("\nToken: OR"); }
-"!"                         { printf("\nToken: NOT"); }
+"if"                        { printf("\nToken: IF         Lexema: %s", yytext); }
+"else"                      { printf("\nToken: ELSE       Lexema: %s", yytext); }
+"while"                     { printf("\nToken: WHILE      Lexema: %s", yytext); }
+"foreach"                   { printf("\nToken: FOREACH    Lexema: %s", yytext); }
+"set"                       { printf("\nToken: SET        Lexema: %s", yytext); }
+"list"                      { printf("\nToken: LIST       Lexema: %s", yytext); }
+"pop"                       { printf("\nToken: POP        Lexema: %s", yytext); }
+"push"                      { printf("\nToken: PUSH       Lexema: %s", yytext); }
+"to"                        { printf("\nToken: TO         Lexema: %s", yytext); }
+"in"                        { printf("\nToken: IN         Lexema: %s", yytext); }
+"=="                        { printf("\nToken: ISEQUAL    Lexema: %s", yytext); }
+"!="                        { printf("\nToken: NOTEQUAL   Lexema: %s", yytext); }
+"&&"                        { printf("\nToken: AND        Lexema: %s", yytext); }
+"||"                        { printf("\nToken: OR         Lexema: %s", yytext); }
+"!"                         { printf("\nToken: NOT        Lexema: %s", yytext); }
 
-"|"                         { printf("\nToken: UNION"); }
-"&"                         { printf("\nToken: INTERS"); }
-"&!"                        { printf("\nToken: DIFF"); }
+"|"                         { printf("\nToken: UNION      Lexema: %s", yytext); }
+"&"                         { printf("\nToken: INTERS     Lexema: %s", yytext); }
+"&!"                        { printf("\nToken: DIFF       Lexema: %s", yytext); }
 
 "[" |
 "]" |
@@ -61,10 +61,10 @@ enum yytokentype {
 ")" |
 "," |
 ";" |
-"="                         { printf("\nToken: %c", yytext[0]); }
+"="                         { printf("\nToken: %c          Lexema: %s", yytext[0], yytext); }
 
-"'"[a-zA-Z0-9]+             { printf("\nToken: ELEM"); }
-[a-zA-Z][a-zA-Z0-9]*        { printf("\nToken: ID"); }
+"'"[a-zA-Z0-9]+             { printf("\nToken: ELEM       Lexema: %s", yytext); }
+[a-zA-Z][a-zA-Z0-9]*        { printf("\nToken: ID         Lexema: %s", yytext); }
 
 "\n"                        { /* Ignora saltos de linea */ }
 "//".*                      { /* Ignora comentarios */ }

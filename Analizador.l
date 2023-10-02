@@ -1,8 +1,4 @@
 %{
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 void yyerror(char *s);
 
 /* TOKENS */
@@ -32,8 +28,6 @@ enum yytokentype {
 %}
 
 %option noyywrap
-/* Permite obtener el numero de linea */
-%option yylineno
 
 %%
 
@@ -57,9 +51,6 @@ enum yytokentype {
 "&"                         { return INTERS; }
 "&!"                        { return DIFF; }
 
-("'")([a-zA-Z0-9]+)         { return ELEM; }
-([a-zA-z])([a-zA-Z0-9]*)    { return ID; }
-
 "[" |
 "]" |
 "{" |
@@ -69,6 +60,9 @@ enum yytokentype {
 "," |
 ";" |
 "="                         { return yytext[0]; }
+
+"'"[a-zA-Z0-9]+             { return ELEM; }
+[a-zA-Z][a-zA-Z0-9]*        { return ID; }
 
 "\n"                        { /* Ignora saltos de linea */ }
 "//".*                      { /* Ignora comentarios */ }

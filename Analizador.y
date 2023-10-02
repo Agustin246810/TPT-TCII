@@ -1,5 +1,6 @@
 %{
   #include <stdio.h>
+  #include <stdlib.h>
 
   int yylex(void);
   void yyerror(char *s);
@@ -13,6 +14,8 @@
 
 %left ','
 %left ';'
+%left '['
+%left ']'
 
 %left UNION
 %left INTERS
@@ -153,6 +156,7 @@
     | ELEM
     | ID
     | pop
+    | positionElem
   ;
 
   /* No admite lista de expresiones vacia */
@@ -186,6 +190,13 @@
     | '[' expressionList ']'
   ;
 
+  positionElem
+    : list '[' ELEM ']'
+    | list '[' ID ']'
+    | ID '[' ELEM ']'
+    | ID '[' ID ']'
+  ;
+
   pop
     : POP list
   ;
@@ -203,7 +214,8 @@ int main(void)
 
 void yyerror(char *s)
 {
-  printf("\n%s", s);
+  printf("\n\nERROR: %s, saliendo...", s);
+  exit(1);
 }
 
 int yywrap()

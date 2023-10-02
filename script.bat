@@ -1,32 +1,28 @@
 @echo off
 
-@REM flex ImprimeTyL.l
-@REM echo "Flex compilado"
-@REM pause
-@REM gcc .\lex.yy.c -o Compilado.exe
-@REM echo "gcc compilado"
-@REM pause
-@REM Compilado.exe
-@REM echo "Se ejecuto correctamente"
-@REM del lex.yy.c
-@REM del Compilado.exe
-@REM echo "Se eliminaron los archivos generados"
-@REM pause
-
-bison -dy Analizador.y
-echo "Bison compilado"
-@REM pause
-flex Analizador.l
+flex ImprimeTyL.l
 echo "Flex compilado"
-@REM pause
-gcc lex.yy.c y.tab.c
+pause
+gcc .\lex.yy.c -o Compilado.exe
 echo "gcc compilado"
-@REM pause
-a.exe
+pause
+Compilado.exe
 echo "Se ejecuto correctamente"
-@REM pause
-del a.exe
 del lex.yy.c
-del y.tab.c
-del y.tab.h
+del Compilado.exe
 echo "Se eliminaron los archivos generados"
+pause
+
+@REM bison -dy Analizador.y
+@REM echo "Bison compilado"
+@REM flex Analizador.l
+@REM echo "Flex compilado"
+@REM gcc lex.yy.c y.tab.c
+@REM echo "gcc compilado"
+@REM a.exe
+@REM echo "Se ejecuto correctamente"
+@REM del a.exe
+@REM del lex.yy.c
+@REM del y.tab.c
+@REM del y.tab.h
+@REM echo "Se eliminaron los archivos generados"

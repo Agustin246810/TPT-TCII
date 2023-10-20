@@ -67,25 +67,25 @@ Tree ElemDT(Tree CL, int pos);
 /*Operaciones con LIST*/
 
 // Agrega una copia de un elemento a la lista por el final
-void PUSH(Tree L, Tree elem);
+void Push(Tree L, Tree elem);
 // Elimina el ultimo elemento de la lista y lo devuelve como salida
-Tree POP(Tree *L);
+Tree Pop(Tree *L);
 // Retorna el tamanio de la lista
-int SIZEL(Tree L);
+int SizeL(Tree L);
 
 /*Operaciones con SET*/
 // Todas las operciones retornan -1 o NULL cuando no corresponde el tipo
 
 // Calcula la cantidad de elementos de un conjunto
-int CARDINAL(Tree S);
+int Cardinal(Tree S);
 // Determina si un elemento pertenece a un conjunto (1: pertenece, 0: no pertenece)
-int IN(Tree set, Tree elem);
+int In(Tree set, Tree elem);
 // Genera un nuevo conjunto que resulta de la union de dos conjuntos
-Tree UNION(Tree set1, Tree set2);
+Tree Union(Tree set1, Tree set2);
 // Genera un nuevo conjunto que resulta de la interseccion de dos conjuntos
-Tree INTER(Tree set1, Tree set2);
+Tree Inter(Tree set1, Tree set2);
 // Genera un nuevo conjunto que resulta de la diferencia de dos conjuntos (set1 - set2)
-Tree DIFF(Tree set1, Tree set2);
+Tree Diff(Tree set1, Tree set2);
 // Devuelve 1 si el conjunto es vacio y 0 si no lo es.
 // Devuelve -1 en caso de que haya algun error en el parametro set.
 int IsVoid(Tree set);

@@ -81,7 +81,7 @@ int _IsContained(Tree set1, Tree set2)
     return (set1->data == NULL);
   }
 
-  if (!IN(set2, set1->data)) // Verificamos si el elemento n de set2 esta en set1
+  if (!In(set2, set1->data)) // Verificamos si el elemento n de set2 esta en set1
   {
     return 0;
   }
@@ -191,7 +191,7 @@ Tree CreateDT(TString s)
 
         aux2 = CreateDT(element);
 
-        if (IN(newTree, aux2))
+        if (In(newTree, aux2))
         {
           FreeDT(&aux2);
         }
@@ -375,7 +375,7 @@ void _PrintDTrec(Tree tree)
   }
 }
 
-int SIZEL(Tree L)
+int SizeL(Tree L)
 {
   if (L == NULL)
   {
@@ -403,7 +403,7 @@ int SIZEL(Tree L)
   return count;
 }
 
-int CARDINAL(Tree S)
+int Cardinal(Tree S)
 {
 
   if (S == NULL)
@@ -500,7 +500,7 @@ Tree ElemDT(Tree CL, int pos)
   return CL->data;
 }
 
-void PUSH(Tree L, Tree elem)
+void Push(Tree L, Tree elem)
 {
   if (L != NULL)
   {
@@ -524,7 +524,7 @@ void PUSH(Tree L, Tree elem)
   }
 }
 
-Tree POP(Tree *L)
+Tree Pop(Tree *L)
 {
   Tree aux = NULL;
   Tree newTree = NULL;
@@ -596,7 +596,7 @@ void FreeDT(Tree *d)
   }
 }
 
-int IN(Tree set, Tree elem)
+int In(Tree set, Tree elem)
 {
   if (set == NULL || elem == NULL) // Por si algun parametro ingresado es nulo
   {                                // Debe devolver 0 para la llamada recursiva
@@ -618,10 +618,10 @@ int IN(Tree set, Tree elem)
     return 1;
   }
 
-  return (IN(set->next, elem));
+  return (In(set->next, elem));
 }
 
-Tree UNION(Tree set1, Tree set2)
+Tree Union(Tree set1, Tree set2)
 {
   Tree newSet = NULL;
   Tree aux = NULL;
@@ -656,7 +656,7 @@ Tree UNION(Tree set1, Tree set2)
 
   while (set2 != NULL) // Se agregan los elementos restantes
   {
-    if (!IN(set1, set2->data))
+    if (!In(set1, set2->data))
     {
       aux->next = _CreateSingleDTSet();
       aux = aux->next;
@@ -669,7 +669,7 @@ Tree UNION(Tree set1, Tree set2)
   return newSet;
 }
 
-Tree INTER(Tree set1, Tree set2)
+Tree Inter(Tree set1, Tree set2)
 {
   Tree newSet = NULL, aux = NULL;
 
@@ -690,7 +690,7 @@ Tree INTER(Tree set1, Tree set2)
 
   while (set2 != NULL)
   {
-    if (IN(set1, set2->data))
+    if (In(set1, set2->data))
     {
       if (newSet == NULL)
       {
@@ -712,7 +712,7 @@ Tree INTER(Tree set1, Tree set2)
   return newSet != NULL ? newSet : _CreateSingleDTSet();
 }
 
-Tree DIFF(Tree set1, Tree set2)
+Tree Diff(Tree set1, Tree set2)
 {
   Tree newSet = NULL, aux = NULL;
 
@@ -738,7 +738,7 @@ Tree DIFF(Tree set1, Tree set2)
 
   while (set1 != NULL)
   {
-    if (!IN(set2, set1->data))
+    if (!In(set2, set1->data))
     {
       if (newSet == NULL)
       {

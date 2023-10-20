@@ -8,6 +8,10 @@
 EXP ([Ee][-+]?[0-9]+)
 %%
  /* single character ops */
+"{" |
+"}" |
+"[" |
+"]" |
 "+" |
 "-" |
 "*" |
@@ -21,7 +25,7 @@ EXP ([Ee][-+]?[0-9]+)
  /* comparison ops, all are a CMP token */
 ">"  { yylval.fn = 1; return CMP; }
 "<"  { yylval.fn = 2; return CMP; }
-"<>" { yylval.fn = 3; return CMP; }
+"!=" { yylval.fn = 3; return CMP; }
 "==" { yylval.fn = 4; return CMP; }
 ">=" { yylval.fn = 5; return CMP; }
 "<=" { yylval.fn = 6; return CMP; }
@@ -31,6 +35,12 @@ EXP ([Ee][-+]?[0-9]+)
 "&"  {yylval.fn = 11; return SETOP;}
 "&!" {yylval.fn = 12; return SETOP;}
 
+"&&" {yylval.fn = 20; return LOGICOP;}
+"||" {yylval.fn = 21; return LOGICOP;}
+"!"  {yylval.fn = 22; return LOGICOP;}
+
+"'"[a-zA-Z0-9]+ {yylval.c = yytext; return ELEM;} //La cadena se guarda junto con el '
+
  /* keywords */
 "if" { return IF; }
 "then" { return THEN; }
@@ -38,15 +48,18 @@ EXP ([Ee][-+]?[0-9]+)
 "while" { return WHILE; }
 "do" { return DO; }
 "let" { return LET;}
+"foreach" {return FOREACH;}
+"pop" {return POP;}
+"push" {return PUSH;}
+"to" {return TO;}
+"in" {return IN;}
 
  /* built-in functions */
 "sqrt" { yylval.fn = B_sqrt; return FUNC; }
 "exp" { yylval.fn = B_exp; return FUNC; }
 "log" { yylval.fn = B_log; return FUNC; }
 "print" { yylval.fn = B_print; return FUNC; }
- 
- /*AGREGADO ELEM*/
- "'"[a-zA-Z0-9]+ {yylval.c = yytext; return ELEM;}
+
 
  /* names */
 [a-zA-Z][a-zA-Z0-9]* { yylval.s = lookup(yytext); return NAME; }

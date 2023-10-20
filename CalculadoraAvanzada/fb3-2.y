@@ -19,8 +19,8 @@ int yylex(void);
 %token <s> NAME
 %token <fn> FUNC
 %token EOL
-%token IF THEN ELSE WHILE DO LET
-%nonassoc <fn> CMP SETOP //AGREGAMOS SETOP
+%token IF THEN ELSE WHILE DO LET FOREACH POP PUSH TO IN
+%nonassoc <fn> CMP SETOP LOGICOP //AGREGAMOS SETOP y LOGICOP
 %right '='
 %left '+' '-'
 %left '*' '/'
@@ -66,7 +66,7 @@ exp
   | '[' ']' {$$ = newast(LISTAST, NULL, NULL);}
   | '[' explist ']' {$$ = newast(LISTAST, $2, NULL);}
   | exp SETOP exp {$$ = newast($2, $1, $3);}
-  | ELEM {$$ = newelm($1);}
+  | ELEM {$$ = newelem($1);}
   /* TODO: agregar pop y positionElem */
 ;
 

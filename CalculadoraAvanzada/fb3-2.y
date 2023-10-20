@@ -1,11 +1,15 @@
+
 /* calculator with AST */
+
 %{
 # include <stdio.h>
 # include <stdlib.h>
+#include <stdarg.h>
 # include "fb3-2.h"
 
 int yylex(void);
 %}
+
 %union {
  struct ast *a;
  double d;
@@ -14,6 +18,7 @@ int yylex(void);
  int fn; /* which function */
  char* c;
 }
+
 /* declare tokens */
 %token <d> NUMBER
 %token <s> NAME
@@ -34,18 +39,21 @@ int yylex(void);
 
 %%
 
-stmt: IF exp THEN list { $$ = newflow('I', $2, $4, NULL); }
- | IF exp THEN list ELSE list { $$ = newflow('I', $2, $4, $6); }
- | WHILE exp DO list { $$ = newflow('W', $2, $4, NULL); }
- | exp
+stmt
+  : IF exp THEN list { $$ = newflow('I', $2, $4, NULL); }
+  | IF exp THEN list ELSE list { $$ = newflow('I', $2, $4, $6); }
+  | WHILE exp DO list { $$ = newflow('W', $2, $4, NULL); }
+  | exp
 ;
-list: /* nothing */ { $$ = NULL; }
- | stmt ';' list { if ($3 == NULL)
- $$ = $1;
- else
- $$ = newast('L', $1, $3);
- }
- ;
+
+list
+  : /* nothing */ { $$ = NULL; }
+  | stmt ';' list { if ($3 == NULL)
+  $$ = $1;
+  else
+  $$ = newast('L', $1, $3);
+  }
+;
 
 exp
   : exp CMP exp { $$ = newcmp($2, $1, $3); }
@@ -70,33 +78,44 @@ exp
   /* TODO: agregar pop y positionElem */
 ;
 
-explist: exp
- | exp ',' explist { $$ = newast('L', $1, $3); }
-;
-symlist: NAME { $$ = newsymlist($1, NULL); }
- | NAME ',' symlist { $$ = newsymlist($1, $3); }
+explist
+  : exp
+  | exp ',' explist { $$ = newast('L', $1, $3); }
 ;
 
-calclist: /* nothing */
- | calclist stmt EOL {
- printf("= %4.4g\n> ", eval($2));
- treefree($2);
- }
- | calclist LET NAME '(' symlist ')' '=' list EOL {
- dodef($3, $5, $8);
- printf("Defined %s\n> ", $3->name); }
- | calclist error EOL { yyerrok; printf("> "); }
+symlist
+  : NAME { $$ = newsymlist($1, NULL); }
+  | NAME ',' symlist { $$ = newsymlist($1, $3); }
+;
+
+calclist
+  : /* nothing */
+  | calclist stmt EOL
+  {
+    printf("= %4.4g\n> ", eval($2));
+    treefree($2);
+  }
+  | calclist LET NAME '(' symlist ')' '=' list EOL
+  {
+    dodef($3, $5, $8);
+    printf("Defined %s\n> ", $3->name);
+  }
+  | calclist error EOL { yyerrok; printf("> "); }
 ;
 
 %%
 
 void yyerror(char *s, ...)
 {
-  printf("\n\nERROR: %s, saliendo...", s);
-  exit(1);
+ va_list ap;
+ va_start(ap, s);
+ fprintf(stderr, "%d: error: ", yylineno);
+ vfprintf(stderr, s, ap);
+ fprintf(stderr, "\n");
 }
 
 int main(void)
 {
-  return (yyparse());
+ printf("> ");
+ return yyparse();
 }

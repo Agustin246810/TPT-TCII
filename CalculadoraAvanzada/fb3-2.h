@@ -2,6 +2,7 @@
  * Declarations for a calculator fb3-1
  */
 /* interface to the lexer */
+
 extern int yylineno; /* from lexer */
 void yyerror(char *s, ...);
 /* symbol table */

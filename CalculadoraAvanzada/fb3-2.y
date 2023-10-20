@@ -28,6 +28,9 @@ int yylex(void);
 %type <sl> symlist
 %start calclist
 
+/* AGREGADOS */
+%token SETOP ELEM
+
 %%
 
 stmt: IF exp THEN list { $$ = newflow('I', $2, $4, NULL); }
@@ -43,19 +46,27 @@ list: /* nothing */ { $$ = NULL; }
  }
  ;
 
-exp: exp CMP exp { $$ = newcmp($2, $1, $3); }
- | exp '+' exp { $$ = newast('+', $1,$3); }
- | exp '-' exp { $$ = newast('-', $1,$3);}
- | exp '*' exp { $$ = newast('*', $1,$3); }
- | exp '/' exp { $$ = newast('/', $1,$3); }
- | '|' exp { $$ = newast('|', $2, NULL); }
- | '(' exp ')' { $$ = $2; }
- | '-' exp %prec UMINUS { $$ = newast('M', $2, NULL); }
- | NUMBER { $$ = newnum($1); }
- | NAME { $$ = newref($1); }
- | NAME '=' exp { $$ = newasgn($1, $3); }
- | FUNC '(' explist ')' { $$ = newfunc($1, $3); }
- | NAME '(' explist ')' { $$ = newcall($1, $3); }
+exp
+  : exp CMP exp { $$ = newcmp($2, $1, $3); }
+  | exp '+' exp { $$ = newast('+', $1,$3); }
+  | exp '-' exp { $$ = newast('-', $1,$3);}
+  | exp '*' exp { $$ = newast('*', $1,$3); }
+  | exp '/' exp { $$ = newast('/', $1,$3); }
+  | '|' exp { $$ = newast('|', $2, NULL); }
+  | '(' exp ')' { $$ = $2; }
+  | '-' exp %prec UMINUS { $$ = newast('M', $2, NULL); }
+  | NUMBER { $$ = newnum($1); }
+  | NAME { $$ = newref($1); }
+  | NAME '=' exp { $$ = newasgn($1, $3); }
+  | FUNC '(' explist ')' { $$ = newfunc($1, $3); }
+  | NAME '(' explist ')' { $$ = newcall($1, $3); }
+  | '{' '}'
+  | '{' explist '}'
+  | '[' ']'
+  | '[' explist ']'
+  | exp SETOP exp
+  | ELEM
+  /* TODO: agregar pop y positionElem */
 ;
 explist: exp
  | exp ',' explist { $$ = newast('L', $1, $3); }

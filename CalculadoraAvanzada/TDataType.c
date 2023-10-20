@@ -41,14 +41,15 @@ Tree CopyDT(Tree original)
   {
   case STR:
     return _CreateSingleDTStr(original->dataStr);
-    break;
 
   case LIST:
     copy = _CreateSingleDTList();
     copy->data = CopyDT(original->data);
     copy->next = CopyDT(original->next);
     return copy;
-    break;
+
+  case DOUBLE:
+    return CreateDoubleDT(original->value);
 
   default:
     copy = _CreateSingleDTSet();
@@ -260,9 +261,16 @@ void PrintDT(Tree tree)
       }
       else
       {
-        printf("[");
-        _PrintDTrec(tree);
-        printf("]");
+        if (tree->nodeType == DOUBLE)
+        {
+          printf("%4.4g", tree->value);
+        }
+        else
+        {
+          printf("[");
+          _PrintDTrec(tree);
+          printf("]");
+        }
       }
     }
   }
@@ -449,6 +457,23 @@ TString StrDT(Tree d)
   return d->dataStr;
 }
 
+double ValueDT(Tree d)
+{
+  if (!d)
+  {
+    printf("Error, NULL point.");
+    return 0.0;
+  }
+
+  if (d->nodeType != DOUBLE)
+  {
+    printf("Error, tipo incorrecto.");
+    return 0.0;
+  }
+
+  return d->value;
+}
+
 Tree ElemDT(Tree CL, int pos)
 {
   if (CL == NULL)
@@ -552,14 +577,22 @@ void FreeDT(Tree *d)
       FreeString(&((*d)->dataStr));
       free(*d);
       *d = NULL;
+
+      return;
     }
-    else
+
+    if ((*d)->nodeType == DOUBLE)
     {
-      FreeDT(&(*d)->next);
-      FreeDT(&(*d)->data);
       free(*d);
       *d = NULL;
+
+      return;
     }
+
+    FreeDT(&(*d)->next);
+    FreeDT(&(*d)->data);
+    free(*d);
+    *d = NULL;
   }
 }
 
@@ -798,6 +831,24 @@ Tree CreateDT3(int type, Tree elem)
   default:
     return NULL;
   }
+}
+
+Tree CreateDoubleDT(double value)
+{
+  Tree newTree = (Tree)malloc(sizeof(struct DataType));
+
+  if (!newTree)
+  {
+    printf("Error, no hay memoria.");
+
+    return NULL;
+  }
+
+  newTree->nodeType = DOUBLE;
+
+  newTree->value = value;
+
+  return newTree;
 }
 
 Tree CreateNullDT()

@@ -4,6 +4,7 @@
 #define STR 1
 #define SET 2
 #define LIST 3
+#define DOUBLE 4
 
 #include "TString.h"
 
@@ -13,6 +14,7 @@ struct DataType
 	union
 	{
 		char *dataStr;
+		double value;
 		struct
 		{
 			struct DataType *data;
@@ -32,6 +34,8 @@ Tree CreateDT(TString s);
 Tree CreateDT2(int type, TString s);
 // Crea un nuevo DataType de tipo SET o LIST con un unico elemento (una copia del elemento dado)
 Tree CreateDT3(int type, Tree elem);
+// Crea un DataType de tipo double con un valor determinado
+Tree CreateDoubleDT(double value);
 // Devuelve un DataType nulo.
 Tree CreateNullDT();
 // Retorna un puntero a una copia de un DataType dado.
@@ -47,6 +51,12 @@ int TypeDT(Tree d);
 
 // Retorna cadena en hijo izquierdo, si hijo izq no es cadena retorna NULL
 TString StrDT(Tree d);
+
+/*Operaciones con DOUBLE*/
+
+// Retorna el valor guardado en un DataType de tipo DOUBLE, en caso de que
+// no coincida el tipo, devuelve 0 y muestra un mensaje de error.
+double ValueDT(Tree d);
 
 /*Operaciones con SET y LIST*/
 

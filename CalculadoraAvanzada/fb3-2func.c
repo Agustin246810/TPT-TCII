@@ -451,3 +451,17 @@ calluser(struct ufncall *f)
   free(oldval);
   return v;
 }
+
+/*AGREGADO NEWELEM*/
+struct ast *newelem(char *c){
+  struct elem *a = malloc(sizeof(struct elem));
+
+  if (!a)
+  {
+    yyerror("out of space");
+    exit(0);
+  }
+  a->nodetype = ELEMAST;
+  a->c = strdup(c);
+  return (struct ast*)a;
+}

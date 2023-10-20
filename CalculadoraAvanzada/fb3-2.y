@@ -12,6 +12,7 @@ int yylex(void);
  struct symbol *s; /* which symbol */
  struct symlist *sl;
  int fn; /* which function */
+ char* c;
 }
 /* declare tokens */
 %token <d> NUMBER
@@ -19,7 +20,7 @@ int yylex(void);
 %token <fn> FUNC
 %token EOL
 %token IF THEN ELSE WHILE DO LET
-%nonassoc <fn> CMP
+%nonassoc <fn> CMP SETOP //AGREGAMOS SETOP
 %right '='
 %left '+' '-'
 %left '*' '/'
@@ -29,7 +30,7 @@ int yylex(void);
 %start calclist
 
 /* AGREGADOS */
-%token SETOP ELEM
+%token <c> ELEM
 
 %%
 
@@ -60,14 +61,15 @@ exp
   | NAME '=' exp { $$ = newasgn($1, $3); }
   | FUNC '(' explist ')' { $$ = newfunc($1, $3); }
   | NAME '(' explist ')' { $$ = newcall($1, $3); }
-  | '{' '}'
-  | '{' explist '}'
-  | '[' ']'
-  | '[' explist ']'
-  | exp SETOP exp
-  | ELEM
+  | '{' '}' {$$ = newast(SETAST, NULL, NULL);}
+  | '{' explist '}' {$$ = newast(SETAST, $2, NULL);}
+  | '[' ']' {$$ = newast(LISTAST, NULL, NULL);}
+  | '[' explist ']' {$$ = newast(LISTAST, $2, NULL);}
+  | exp SETOP exp {$$ = newast($2, $1, $3);}
+  | ELEM {$$ = newelm($1);}
   /* TODO: agregar pop y positionElem */
 ;
+
 explist: exp
  | exp ',' explist { $$ = newast('L', $1, $3); }
 ;

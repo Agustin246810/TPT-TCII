@@ -1,8 +1,15 @@
+#include "TDataType.h"
 /*
  * Declarations for a calculator fb3-1
  */
-/* interface to the lexer */
 
+/*AGREGADO*/
+#define SETAST 400
+#define LISTAST 401
+#define ELEMAST 402
+#define DOUBLEAST 403
+
+/* interface to the lexer */
 extern int yylineno; /* from lexer */
 void yyerror(char *s, ...);
 /* symbol table */
@@ -37,6 +44,8 @@ void symlistfree(struct symlist *sl);
  * S list of symbols
  * F built in function call
  * C user function call
+ * 
+ *  
  */
 enum bifs
 { /* built-in functions */
@@ -88,6 +97,16 @@ struct symasgn
   struct symbol *s;
   struct ast *v; /* value */
 };
+
+/*AGREGADO*/
+struct elem
+{
+  int nodetype; /*type = ELEMAST*/
+  char* c;
+};
+
+
+
 /* build an AST */
 struct ast *newast(int nodetype, struct ast *l, struct ast *r);
 struct ast *newcmp(int cmptype, struct ast *l, struct ast *r);
@@ -97,6 +116,10 @@ struct ast *newref(struct symbol *s);
 struct ast *newasgn(struct symbol *s, struct ast *v);
 struct ast *newnum(double d);
 struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *tr);
+
+/*AGREGADO*/
+struct ast *newelem(char* c);
+
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts);
 /* evaluate an AST */

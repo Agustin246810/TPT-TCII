@@ -19,12 +19,18 @@ EXP ([Ee][-+]?[0-9]+)
 "(" |
 ")" { return yytext[0]; }
  /* comparison ops, all are a CMP token */
-">" { yylval.fn = 1; return CMP; }
-"<" { yylval.fn = 2; return CMP; }
+">"  { yylval.fn = 1; return CMP; }
+"<"  { yylval.fn = 2; return CMP; }
 "<>" { yylval.fn = 3; return CMP; }
 "==" { yylval.fn = 4; return CMP; }
 ">=" { yylval.fn = 5; return CMP; }
 "<=" { yylval.fn = 6; return CMP; }
+
+ /*Agregados*/
+"|"  {yylval.fn = 10; return SETOP;}
+"&"  {yylval.fn = 11; return SETOP;}
+"&!" {yylval.fn = 12; return SETOP;}
+
  /* keywords */
 "if" { return IF; }
 "then" { return THEN; }
@@ -38,6 +44,10 @@ EXP ([Ee][-+]?[0-9]+)
 "exp" { yylval.fn = B_exp; return FUNC; }
 "log" { yylval.fn = B_log; return FUNC; }
 "print" { yylval.fn = B_print; return FUNC; }
+ 
+ /*AGREGADO ELEM*/
+ "'"[a-zA-Z0-9]+ {yylval.c = yytext; return ELEM;}
+
  /* names */
 [a-zA-Z][a-zA-Z0-9]* { yylval.s = lookup(yytext); return NAME; }
 [0-9]+"."[0-9]*{EXP}? |

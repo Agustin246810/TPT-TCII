@@ -9,6 +9,14 @@
 #define ELEMAST 402
 #define DOUBLEAST 403
 
+#define ANDOP 500
+#define OROP 501
+#define NOTOP 502
+
+#define UNIONOP 600
+#define INTERSOP 601
+#define DIFFOP 602
+
 /* interface to the lexer */
 extern int yylineno; /* from lexer */
 void yyerror(char *s, ...);
@@ -117,6 +125,7 @@ struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *
 
 /*AGREGADO*/
 struct ast *newelem(char *c);
+struct ast *newlogicop(int logicOpType, struct ast *l, struct ast *r);
 
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts);

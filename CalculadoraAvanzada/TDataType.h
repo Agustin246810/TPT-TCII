@@ -46,6 +46,8 @@ void FreeDT(Tree *d);
 void PrintDT(Tree tree);
 // Retorna tipo de dato
 int TypeDT(Tree d);
+// Retorna 0 cuando los elementos son distintos y 1 cuando son iguales.
+int CompareDT(Tree elem1, Tree elem2);
 
 /*Operaciones con STR*/
 

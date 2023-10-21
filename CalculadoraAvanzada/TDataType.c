@@ -21,9 +21,6 @@ Tree _CreateSingleDTSet();
 // Retorna un puntero a un DataType de tipo LIST con hijos nulos.
 Tree _CreateSingleDTList();
 
-// Retorna 0 cuando los elementos son distintos y 1 cuando son iguales.
-int _CompareDT(Tree elem1, Tree elem2);
-
 // Retorna 1 cuando el primer conjunto esta
 // contenido en el otro 0 cuando no lo esta.
 int _IsContained(Tree set1, Tree set2);
@@ -89,7 +86,7 @@ int _IsContained(Tree set1, Tree set2)
   return _IsContained(set1->next, set2); // Verificamos para el elemento n+1
 }
 
-int _CompareDT(Tree elem1, Tree elem2)
+int CompareDT(Tree elem1, Tree elem2)
 {
   if (elem1 == NULL || elem2 == NULL)
   {
@@ -111,7 +108,7 @@ int _CompareDT(Tree elem1, Tree elem2)
       return (_IsContained(elem1, elem2) && _IsContained(elem2, elem1));
 
     case LIST:
-      return (_CompareDT(elem1->data, elem2->data) && _CompareDT(elem1->next, elem2->next));
+      return (CompareDT(elem1->data, elem2->data) && CompareDT(elem1->next, elem2->next));
 
     case DOUBLE:
       return (elem1->value == elem2->value);
@@ -625,7 +622,7 @@ int In(Tree set, Tree elem)
     return 0;
   }
 
-  if (_CompareDT(set->data, elem))
+  if (CompareDT(set->data, elem))
   {
     return 1;
   }

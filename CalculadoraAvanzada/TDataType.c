@@ -110,8 +110,14 @@ int _CompareDT(Tree elem1, Tree elem2)
     case SET:
       return (_IsContained(elem1, elem2) && _IsContained(elem2, elem1));
 
-    default:
+    case LIST:
       return (_CompareDT(elem1->data, elem2->data) && _CompareDT(elem1->next, elem2->next));
+
+    case DOUBLE:
+      return (elem1->value == elem2->value);
+
+    default:
+      return 0;
     }
   }
 }
@@ -365,6 +371,12 @@ void _PrintDTrec(Tree tree)
     }
     else
     {
+      if (tree->nodeType == DOUBLE)
+      {
+        printf("%4.4g", tree->value);
+        return;
+      }
+
       PrintDT(tree->data);
       if (tree->next != NULL)
       {

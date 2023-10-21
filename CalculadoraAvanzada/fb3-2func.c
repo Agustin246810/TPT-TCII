@@ -182,6 +182,11 @@ struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *
 /* free a tree of ASTs */
 void treefree(struct ast *a)
 {
+  if (!a) // Agregado para que no de error al ingresar NULL
+  {       // al liberar conjunto o lista vacia
+    return;
+  }
+
   switch (a->nodetype)
   {
   /* two subtrees */
@@ -205,6 +210,7 @@ void treefree(struct ast *a)
   case 'C':
   case 'F':
   case NOTOP:
+  case SETAST:
     treefree(a->l);
   /* no subtree */
   case 'K':
@@ -261,8 +267,9 @@ static Tree calluser(struct ufncall *);
 Tree eval(struct ast *a)
 {
   // TODO: verificar los tipos de datos.
+  struct ast *auxAST; // variable auxiliar para recorrer un subarbol
   Tree v = CreateDoubleDT(0.0);
-  Tree l, r; // Auxiliares para liberar memoria
+  Tree l, r, auxDT; // Auxiliares para liberar memoria
   if (!a)
   {
     yyerror("internal error, null eval");
@@ -286,6 +293,49 @@ Tree eval(struct ast *a)
     ((struct symasgn *)a)->s->value = CopyDT(eval(((struct symasgn *)a)->v));
     v = CopyDT(((struct symasgn *)a)->s->value);
     break;
+
+  /* Set expressions */
+  case SETAST:
+    v = CreateDT("{}"); // Se crea el conjunto originalmente vacio
+    if (a->l != NULL)   // En caso de contener expresiones, se agregan una por una
+    {
+      auxAST = a->l;
+
+      while (auxAST->nodetype == 'L') // Se agregan las expresiones una por una
+      {
+        l = eval(auxAST->l);
+        r = CreateDT3(SET, l);
+
+        // printf("\n");
+        // PrintDT(v);
+
+        auxDT = Union(v, r);
+
+        FreeDT(&l);
+        FreeDT(&r);
+        FreeDT(&v);
+
+        v = auxDT;
+        auxDT = NULL;
+
+        auxAST = auxAST->r;
+      }
+
+      // Se agrega el ultimo elemento que esta en el hijo derecho de la ultima 'L'
+      l = eval(auxAST);
+      r = CreateDT3(SET, l);
+
+      auxDT = Union(v, r);
+
+      FreeDT(&l);
+      FreeDT(&r);
+      FreeDT(&v);
+
+      v = auxDT;
+      auxDT = NULL;
+    }
+    break;
+
   /* expressions */
   case '+':
     l = eval(a->l);
@@ -374,6 +424,7 @@ Tree eval(struct ast *a)
     FreeDT(&l);
     FreeDT(&r);
     break;
+
   /* logic operations */
   case ANDOP:
     l = eval(a->l);
@@ -440,7 +491,6 @@ Tree eval(struct ast *a)
   /* list of statements */
   case 'L':
     eval(a->l);
-    // v = eval(a->r);
     v = eval(a->r);
     break;
   case 'F':

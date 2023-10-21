@@ -99,8 +99,12 @@ calclist
   : /* nothing */
   | calclist stmt EOL
   {
-    printf("= %4.4g\n> ", ValueDT(eval($2)));
+    Tree v = eval($2);
+    printf("= ");
+    PrintDT(v);
+    printf("\n> ");
     treefree($2);
+    FreeDT(&v);
   }
   | calclist LET NAME '(' symlist ')' '=' list EOL
   {

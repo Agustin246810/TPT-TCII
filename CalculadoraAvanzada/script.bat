@@ -4,7 +4,7 @@ bison -d fb3-2.y
 echo "Bison compilado"
 flex fb3-2.l
 echo "Flex compilado"
-gcc fb3-2.tab.c lex.yy.c fb3-2func.c
+gcc fb3-2.tab.c lex.yy.c fb3-2func.c TDataType.c TString.c
 echo "gcc compilado"
 a.exe
 echo "Se ejecuto correctamente"

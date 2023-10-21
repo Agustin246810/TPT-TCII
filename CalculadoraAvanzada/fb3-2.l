@@ -48,11 +48,11 @@ EXP ([Ee][-+]?[0-9]+)
 "while"                 { return WHILE; }
 "do"                    { return DO; }
 "let"                   { return LET;}
-"foreach"               {return FOREACH;}
-"pop"                   {return POP;}
-"push"                  {return PUSH;}
-"to"                    {return TO;}
-"in"                    {return IN;}
+"foreach"               { return FOREACH;}
+"pop"                   { return POP;}
+"push"                  { return PUSH;}
+"to"                    { return TO;}
+"in"                    { return IN;}
 
  /* built-in functions */
 "sqrt"                  { yylval.fn = B_sqrt; return FUNC; }

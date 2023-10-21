@@ -7,10 +7,10 @@
 #include <string.h>
 #include <math.h>
 #include "fb3-2.h"
+#include "TDataType.h"
 /* symbol table */
 /* hash a symbol */
-static unsigned
-symhash(char *sym)
+static unsigned symhash(char *sym)
 {
   unsigned int hash = 0;
   unsigned c;
@@ -18,8 +18,8 @@ symhash(char *sym)
     hash = hash * 9 ^ c;
   return hash;
 }
-struct symbol *
-lookup(char *sym)
+
+struct symbol *lookup(char *sym)
 {
   struct symbol *sp = &symtab[symhash(sym) % NHASH];
   int scount = NHASH; /* how many have we looked at */
@@ -32,7 +32,7 @@ lookup(char *sym)
     if (!sp->name)
     { /* new entry */
       sp->name = strdup(sym);
-      sp->value = 0;
+      sp->value = CreateDoubleDT(0.0);
       sp->func = NULL;
       sp->syms = NULL;
       return sp;
@@ -43,8 +43,8 @@ lookup(char *sym)
   yyerror("symbol table overflow\n");
   abort(); /* tried them all, table is full */
 }
-struct ast *
-newast(int nodetype, struct ast *l, struct ast *r)
+
+struct ast *newast(int nodetype, struct ast *l, struct ast *r)
 {
   struct ast *a = malloc(sizeof(struct ast));
 
@@ -58,8 +58,8 @@ newast(int nodetype, struct ast *l, struct ast *r)
   a->r = r;
   return a;
 }
-struct ast *
-newnum(double d)
+
+struct ast *newnum(double d)
 {
   struct numval *a = malloc(sizeof(struct numval));
 
@@ -72,8 +72,8 @@ newnum(double d)
   a->number = d;
   return (struct ast *)a;
 }
-struct ast *
-newcmp(int cmptype, struct ast *l, struct ast *r)
+
+struct ast *newcmp(int cmptype, struct ast *l, struct ast *r)
 {
   struct ast *a = malloc(sizeof(struct ast));
 
@@ -87,8 +87,8 @@ newcmp(int cmptype, struct ast *l, struct ast *r)
   a->r = r;
   return a;
 }
-struct ast *
-newfunc(int functype, struct ast *l)
+
+struct ast *newfunc(int functype, struct ast *l)
 {
   struct fncall *a = malloc(sizeof(struct fncall));
 
@@ -102,8 +102,8 @@ newfunc(int functype, struct ast *l)
   a->functype = functype;
   return (struct ast *)a;
 }
-struct ast *
-newcall(struct symbol *s, struct ast *l)
+
+struct ast *newcall(struct symbol *s, struct ast *l)
 {
   struct ufncall *a = malloc(sizeof(struct ufncall));
 
@@ -117,8 +117,8 @@ newcall(struct symbol *s, struct ast *l)
   a->s = s;
   return (struct ast *)a;
 }
-struct ast *
-newref(struct symbol *s)
+
+struct ast *newref(struct symbol *s)
 {
   struct symref *a = malloc(sizeof(struct symref));
 
@@ -131,8 +131,8 @@ newref(struct symbol *s)
   a->s = s;
   return (struct ast *)a;
 }
-struct ast *
-newasgn(struct symbol *s, struct ast *v)
+
+struct ast *newasgn(struct symbol *s, struct ast *v)
 {
   struct symasgn *a = malloc(sizeof(struct symasgn));
   if (!a)
@@ -145,8 +145,8 @@ newasgn(struct symbol *s, struct ast *v)
   a->v = v;
   return (struct ast *)a;
 }
-struct ast *
-newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *el)
+
+struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *el)
 {
   struct flow *a = malloc(sizeof(struct flow));
 
@@ -161,6 +161,7 @@ newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *el)
   a->el = el;
   return (struct ast *)a;
 }
+
 /* free a tree of ASTs */
 void treefree(struct ast *a)
 {
@@ -207,8 +208,8 @@ void treefree(struct ast *a)
 
   free(a); /* always free the node itself */
 }
-struct symlist *
-newsymlist(struct symbol *sym, struct symlist *next)
+
+struct symlist *newsymlist(struct symbol *sym, struct symlist *next)
 {
   struct symlist *sl = malloc(sizeof(struct symlist));
 
@@ -221,6 +222,7 @@ newsymlist(struct symbol *sym, struct symlist *next)
   sl->next = next;
   return sl;
 }
+
 /* free a list of symbols */
 void symlistfree(struct symlist *sl)
 {
@@ -233,139 +235,208 @@ void symlistfree(struct symlist *sl)
   }
 }
 
-static double callbuiltin(struct fncall *);
-static double calluser(struct ufncall *);
-double
-eval(struct ast *a)
+static Tree callbuiltin(struct fncall *);
+static Tree calluser(struct ufncall *);
+
+Tree eval(struct ast *a)
 {
-  double v;
+  // TODO: verificar los tipos de datos.
+  Tree v = CreateDoubleDT(0.0);
+  Tree l, r; // Auxiliares para liberar memoria
   if (!a)
   {
     yyerror("internal error, null eval");
-    return 0.0;
+    return NULL;
   }
   switch (a->nodetype)
   {
   /* constant */
   case 'K':
-    v = ((struct numval *)a)->number;
+    // v = ((struct numval *)a)->number;
+    v = CreateDoubleDT(((struct numval *)a)->number);
     break;
   /* name reference */
   case 'N':
-    v = ((struct symref *)a)->s->value;
+    // v = ((struct symref *)a)->s->value;
+    v = CopyDT(((struct symref *)a)->s->value);
     break;
   /* assignment */
   case '=':
-    v = ((struct symasgn *)a)->s->value =
-        eval(((struct symasgn *)a)->v);
+    // v = ((struct symasgn *)a)->s->value = eval(((struct symasgn *)a)->v);
+    ((struct symasgn *)a)->s->value = CopyDT(eval(((struct symasgn *)a)->v));
+    v = CopyDT(((struct symasgn *)a)->s->value);
     break;
   /* expressions */
   case '+':
-    v = eval(a->l) + eval(a->r);
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT(ValueDT(l) + ValueDT(r));
+    FreeDT(&l);
+    FreeDT(&r);
     break;
   case '-':
-    v = eval(a->l) - eval(a->r);
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT(ValueDT(l) - ValueDT(r));
+    FreeDT(&l);
+    FreeDT(&r);
     break;
   case '*':
-    v = eval(a->l) * eval(a->r);
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT(ValueDT(l) * ValueDT(r));
+    FreeDT(&l);
+    FreeDT(&r);
     break;
   case '/':
-    v = eval(a->l) / eval(a->r);
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT(ValueDT(l) / ValueDT(r));
+    FreeDT(&l);
+    FreeDT(&r);
     break;
   case '|':
-    v = fabs(eval(a->l));
+    l = eval(a->l);
+    v = CreateDoubleDT(fabs(ValueDT(l)));
+    FreeDT(&l);
     break;
   case 'M':
-    v = -eval(a->l);
+    l = eval(a->l);
+    v = CreateDoubleDT(-ValueDT(l));
+    FreeDT(&l);
     break;
   /* comparisons */
   case '1':
-    v = (eval(a->l) > eval(a->r)) ? 1 : 0;
+    // v = (eval(a->l) > eval(a->r)) ? 1 : 0;
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT((ValueDT(l) > ValueDT(r)) ? 1 : 0);
+    FreeDT(&l);
+    FreeDT(&r);
     break;
   case '2':
-    v = (eval(a->l) < eval(a->r)) ? 1 : 0;
+    // v = (eval(a->l) < eval(a->r)) ? 1 : 0;
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT((ValueDT(l) < ValueDT(r)) ? 1 : 0);
+    FreeDT(&l);
+    FreeDT(&r);
     break;
   case '3':
-    v = (eval(a->l) != eval(a->r)) ? 1 : 0;
+    // v = (eval(a->l) != eval(a->r)) ? 1 : 0;
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT((ValueDT(l) != ValueDT(r)) ? 1 : 0);
+    FreeDT(&l);
+    FreeDT(&r);
     break;
   case '4':
-    v = (eval(a->l) == eval(a->r)) ? 1 : 0;
+    // v = (eval(a->l) == eval(a->r)) ? 1 : 0;
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT((ValueDT(l) == ValueDT(r)) ? 1 : 0);
+    FreeDT(&l);
+    FreeDT(&r);
     break;
   case '5':
-    v = (eval(a->l) >= eval(a->r)) ? 1 : 0;
+    // v = (eval(a->l) >= eval(a->r)) ? 1 : 0;
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT((ValueDT(l) >= ValueDT(r)) ? 1 : 0);
+    FreeDT(&l);
+    FreeDT(&r);
     break;
   case '6':
-    v = (eval(a->l) <= eval(a->r)) ? 1 : 0;
+    // v = (eval(a->l) <= eval(a->r)) ? 1 : 0;
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT((ValueDT(l) <= ValueDT(r)) ? 1 : 0);
+    FreeDT(&l);
+    FreeDT(&r);
     break;
     /* control flow */
     /* null expressions allowed in the grammar, so check for them */
     /* if/then/else */
   case 'I':
-    if (eval(((struct flow *)a)->cond) != 0)
+    if (ValueDT(eval(((struct flow *)a)->cond)) != 0)
     {
       if (((struct flow *)a)->tl)
       {
-        v = eval(((struct flow *)a)->tl);
+        l = eval(((struct flow *)a)->tl);
+        v = CopyDT(l);
+        FreeDT(&l);
       }
       else
-        v = 0.0; /* a default value */
+        v = CreateDoubleDT(0.0); /* a default value */
     }
     else
     {
       if (((struct flow *)a)->el)
       {
-        v = eval(((struct flow *)a)->el);
+        l = eval(((struct flow *)a)->el);
+        v = CopyDT(l);
+        FreeDT(&l);
       }
       else
-        v = 0.0; /* a default value */
+        v = CreateDoubleDT(0.0); /* a default value */
     }
     break;
     /* while/do */
   case 'W':
-    v = 0.0; /* a default value */
+    v = CreateDoubleDT(0.0); /* a default value */
 
     if (((struct flow *)a)->tl)
     {
-      while (eval(((struct flow *)a)->cond) != 0)
-        v = eval(((struct flow *)a)->tl);
+      while (ValueDT(eval(((struct flow *)a)->cond)) != 0)
+      {
+        l = eval(((struct flow *)a)->tl);
+        v = CopyDT(l);
+        FreeDT(&l);
+      }
     }
     break; /* value of last statement is value of while/do */
 
   /* list of statements */
   case 'L':
     eval(a->l);
+    // v = eval(a->r);
     v = eval(a->r);
     break;
   case 'F':
-    v = callbuiltin((struct fncall *)a);
+    l = callbuiltin((struct fncall *)a);
+    v = CopyDT(l);
+    FreeDT(&l);
     break;
   case 'C':
-    v = calluser((struct ufncall *)a);
+    l = calluser((struct ufncall *)a);
+    v = CopyDT(l);
+    FreeDT(&l);
     break;
   default:
     printf("internal error: bad node %c\n", a->nodetype);
   }
   return v;
 }
-static double
-callbuiltin(struct fncall *f)
+static Tree callbuiltin(struct fncall *f)
 {
+  // TODO: verificar tipo de dato de v
+
   enum bifs functype = f->functype;
-  double v = eval(f->l);
+  double v = ValueDT(eval(f->l));
   switch (functype)
   {
   case B_sqrt:
-    return sqrt(v);
+    return CreateDoubleDT(sqrt(v));
   case B_exp:
-    return exp(v);
+    return CreateDoubleDT(exp(v));
   case B_log:
-    return log(v);
+    return CreateDoubleDT(log(v));
   case B_print:
     printf("= %4.4g\n", v);
-    return v;
+    return CreateDoubleDT(v);
   default:
     yyerror("Unknown built-in function %d", functype);
-    return 0.0;
+    return CreateDoubleDT(0.0);
   }
 }
 /* define a function */
@@ -378,8 +449,8 @@ void dodef(struct symbol *name, struct symlist *syms, struct ast *func)
   name->syms = syms;
   name->func = func;
 }
-static double
-calluser(struct ufncall *f)
+
+static Tree calluser(struct ufncall *f)
 {
   struct symbol *fn = f->s; /* function name */
   struct symlist *sl;       /* dummy arguments */
@@ -391,7 +462,7 @@ calluser(struct ufncall *f)
   if (!fn->func)
   {
     yyerror("call to undefined function", fn->name);
-    return 0;
+    return CreateDoubleDT(0);
   }
   /* count the arguments */
   sl = fn->syms;
@@ -403,7 +474,7 @@ calluser(struct ufncall *f)
   if (!oldval || !newval)
   {
     yyerror("Out of space in %s", fn->name);
-    return 0.0;
+    return CreateDoubleDT(0.0);
   }
 
   /* evaluate the arguments */
@@ -414,16 +485,16 @@ calluser(struct ufncall *f)
       yyerror("too few args in call to %s", fn->name);
       free(oldval);
       free(newval);
-      return 0.0;
+      return CreateDoubleDT(0.0);
     }
     if (args->nodetype == 'L')
     { /* if this is a list node */
-      newval[i] = eval(args->l);
+      newval[i] = ValueDT(eval(args->l));
       args = args->r;
     }
     else
     { /* if it's the end of the list */
-      newval[i] = eval(args);
+      newval[i] = ValueDT(eval(args));
       args = NULL;
     }
   }
@@ -433,27 +504,28 @@ calluser(struct ufncall *f)
   for (i = 0; i < nargs; i++)
   {
     struct symbol *s = sl->sym;
-    oldval[i] = s->value;
-    s->value = newval[i];
+    oldval[i] = ValueDT(s->value);
+    s->value = CreateDoubleDT(newval[i]);
     sl = sl->next;
   }
   free(newval);
   /* evaluate the function */
-  v = eval(fn->func);
+  v = ValueDT(eval(fn->func));
   /* put the real values of the dummies back */
   sl = fn->syms;
   for (i = 0; i < nargs; i++)
   {
     struct symbol *s = sl->sym;
-    s->value = oldval[i];
+    s->value = CreateDoubleDT(oldval[i]);
     sl = sl->next;
   }
   free(oldval);
-  return v;
+  return CreateDoubleDT(v);
 }
 
 /*AGREGADO NEWELEM*/
-struct ast *newelem(char *c){
+struct ast *newelem(char *c)
+{
   struct elem *a = malloc(sizeof(struct elem));
 
   if (!a)
@@ -463,5 +535,5 @@ struct ast *newelem(char *c){
   }
   a->nodetype = ELEMAST;
   a->c = strdup(c);
-  return (struct ast*)a;
+  return (struct ast *)a;
 }

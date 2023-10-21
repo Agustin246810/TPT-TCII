@@ -16,7 +16,7 @@ void yyerror(char *s, ...);
 struct symbol
 { /* a variable name */
   char *name;
-  double value;
+  Tree value;
   struct ast *func;     /* stmt for the function */
   struct symlist *syms; /* list of dummy args */
 };
@@ -44,8 +44,8 @@ void symlistfree(struct symlist *sl);
  * S list of symbols
  * F built in function call
  * C user function call
- * 
- *  
+ *
+ *
  */
 enum bifs
 { /* built-in functions */
@@ -102,10 +102,8 @@ struct symasgn
 struct elem
 {
   int nodetype; /*type = ELEMAST*/
-  char* c;
+  char *c;
 };
-
-
 
 /* build an AST */
 struct ast *newast(int nodetype, struct ast *l, struct ast *r);
@@ -118,12 +116,12 @@ struct ast *newnum(double d);
 struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *tr);
 
 /*AGREGADO*/
-struct ast *newelem(char* c);
+struct ast *newelem(char *c);
 
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts);
 /* evaluate an AST */
-double eval(struct ast *);
+Tree eval(struct ast *);
 /* delete and free an AST */
 void treefree(struct ast *);
 /* interface to the lexer */

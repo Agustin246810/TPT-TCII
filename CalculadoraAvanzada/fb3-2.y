@@ -2,10 +2,11 @@
 /* calculator with AST */
 
 %{
-# include <stdio.h>
-# include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
-# include "fb3-2.h"
+#include "fb3-2.h"
+#include "TDataType.h"
 
 int yylex(void);
 %}
@@ -17,6 +18,7 @@ int yylex(void);
  struct symlist *sl;
  int fn; /* which function */
  char* c;
+ Tree data;
 }
 
 /* declare tokens */
@@ -48,10 +50,11 @@ stmt
 
 list
   : /* nothing */ { $$ = NULL; }
-  | stmt ';' list { if ($3 == NULL)
-  $$ = $1;
-  else
-  $$ = newast('L', $1, $3);
+  | stmt ';' list {
+    if ($3 == NULL)
+    $$ = $1;
+    else
+    $$ = newast('L', $1, $3);
   }
 ;
 
@@ -92,7 +95,7 @@ calclist
   : /* nothing */
   | calclist stmt EOL
   {
-    printf("= %4.4g\n> ", eval($2));
+    printf("= %4.4g\n> ", ValueDT(eval($2)));
     treefree($2);
   }
   | calclist LET NAME '(' symlist ')' '=' list EOL

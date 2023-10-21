@@ -88,7 +88,7 @@ struct ast *newcmp(int cmptype, struct ast *l, struct ast *r)
   return a;
 }
 
-struct ast *newlogicop(int logicOpType, struct ast *l, struct ast *r)
+struct ast *newlogicop(int logicOpType, struct ast *l, struct ast *r) // TODO: es igual que usar newsetop()
 {
   struct ast *a = malloc(sizeof(struct ast));
 
@@ -99,6 +99,23 @@ struct ast *newlogicop(int logicOpType, struct ast *l, struct ast *r)
   }
 
   a->nodetype = logicOpType;
+  a->l = l;
+  a->r = r;
+
+  return a;
+}
+
+struct ast *newsetop(int setOpType, struct ast *l, struct ast *r) // TODO: es igual que usar newlogicop()
+{
+  struct ast *a = malloc(sizeof(struct ast));
+
+  if (!a)
+  {
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = setOpType;
   a->l = l;
   a->r = r;
 
@@ -203,9 +220,12 @@ void treefree(struct ast *a)
   case 'L':
   case ANDOP:
   case OROP:
+  case UNIONOP:
+  case DIFFOP:
+  case INTERSOP:
     treefree(a->r);
   /* one subtree */
-  case '|':
+  case '%':
   case 'M':
   case 'C':
   case 'F':
@@ -228,6 +248,9 @@ void treefree(struct ast *a)
       treefree(((struct flow *)a)->tl);
     if (((struct flow *)a)->el)
       treefree(((struct flow *)a)->el);
+    break;
+  case ELEMAST:
+    free(((struct elemast *)a)->c);
     break;
   default:
     printf("internal error: free bad node %c\n", a->nodetype);
@@ -268,8 +291,9 @@ static Tree calluser(struct ufncall *);
 Tree eval(struct ast *a)
 {
   // TODO: verificar los tipos de datos.
+
   struct ast *auxAST; // variable auxiliar para recorrer un subarbol
-  Tree v = CreateDoubleDT(0.0);
+  Tree v = NULL;
   Tree l, r, auxDT; // Auxiliares para liberar memoria
   if (!a)
   {
@@ -293,6 +317,11 @@ Tree eval(struct ast *a)
     // v = ((struct symasgn *)a)->s->value = eval(((struct symasgn *)a)->v);
     ((struct symasgn *)a)->s->value = CopyDT(eval(((struct symasgn *)a)->v));
     v = CopyDT(((struct symasgn *)a)->s->value);
+    break;
+
+  /* Elem */
+  case ELEMAST:
+    v = CreateDT(((struct elemast *)a)->c);
     break;
 
   /* Literal Set */
@@ -338,6 +367,71 @@ Tree eval(struct ast *a)
     }
     break;
 
+  /* Set Operations */
+  case UNIONOP:
+
+    l = eval(a->l);
+    r = eval(a->r);
+
+    if (TypeDT(l) != SET || TypeDT(r) != SET)
+    {
+      printf("Union error: at least one of the operands is not a set.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
+    v = Union(l, r);
+
+    FreeDT(&l);
+    FreeDT(&r);
+
+    break;
+  case INTERSOP:
+
+    l = eval(a->l);
+    r = eval(a->r);
+
+    if (TypeDT(l) != SET || TypeDT(r) != SET)
+    {
+      printf("Intersection error: at least one of the operands is not a set.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
+    v = Inter(l, r);
+
+    FreeDT(&l);
+    FreeDT(&r);
+
+    break;
+  case DIFFOP:
+
+    l = eval(a->l);
+    r = eval(a->r);
+
+    if (TypeDT(l) != SET || TypeDT(r) != SET)
+    {
+      printf("Difference error: at least one of the operands is not a set.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
+    v = Diff(l, r);
+
+    FreeDT(&l);
+    FreeDT(&r);
+
+    break;
+
   /* Literal List */
   case LISTAST:
     v = CreateDT("[]"); // Se crea la lista originalmente vacia
@@ -370,39 +464,109 @@ Tree eval(struct ast *a)
   case '+':
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("Addition error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT(ValueDT(l) + ValueDT(r));
+
     FreeDT(&l);
     FreeDT(&r);
     break;
   case '-':
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("Substraction error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT(ValueDT(l) - ValueDT(r));
+
     FreeDT(&l);
     FreeDT(&r);
     break;
   case '*':
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("Multiplication error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT(ValueDT(l) * ValueDT(r));
+
     FreeDT(&l);
     FreeDT(&r);
     break;
   case '/':
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("Division error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT(ValueDT(l) / ValueDT(r));
+
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case '|':
+  case '%':
     l = eval(a->l);
+
+    if (TypeDT(l) != DOUBLE)
+    {
+      printf("Abstolute Value error: the operand is not a number.\n");
+
+      FreeDT(&l);
+
+      break;
+    }
+
     v = CreateDoubleDT(fabs(ValueDT(l)));
+
     FreeDT(&l);
     break;
   case 'M':
     l = eval(a->l);
+
+    if (TypeDT(l) != DOUBLE)
+    {
+      printf("UMinus error: the operand is not a number.\n");
+
+      FreeDT(&l);
+
+      break;
+    }
+
     v = CreateDoubleDT(-ValueDT(l));
+
     FreeDT(&l);
     break;
   /* comparisons */
@@ -410,7 +574,19 @@ Tree eval(struct ast *a)
     // v = (eval(a->l) > eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("Greater error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT((ValueDT(l) > ValueDT(r)) ? 1 : 0);
+
     FreeDT(&l);
     FreeDT(&r);
     break;
@@ -418,23 +594,41 @@ Tree eval(struct ast *a)
     // v = (eval(a->l) < eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("Lesser error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT((ValueDT(l) < ValueDT(r)) ? 1 : 0);
+
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case '3':
+  case '3': // Esta operacion funciona para conjuntos, listas, numeros y elementos.
     // v = (eval(a->l) != eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
-    v = CreateDoubleDT((ValueDT(l) != ValueDT(r)) ? 1 : 0);
+
+    // v = CreateDoubleDT((ValueDT(l) != ValueDT(r)) ? 1 : 0);
+    v = CreateDoubleDT((!CompareDT(l, r)) ? 1 : 0);
+
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case '4':
+  case '4': // Esta operacion funciona para conjuntos, listas, numeros y elementos.
     // v = (eval(a->l) == eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
-    v = CreateDoubleDT((ValueDT(l) == ValueDT(r)) ? 1 : 0);
+
+    // v = CreateDoubleDT((ValueDT(l) == ValueDT(r)) ? 1 : 0);
+    v = CreateDoubleDT((CompareDT(l, r)) ? 1 : 0);
+
     FreeDT(&l);
     FreeDT(&r);
     break;
@@ -442,7 +636,19 @@ Tree eval(struct ast *a)
     // v = (eval(a->l) >= eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("GreaterOrEqual error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT((ValueDT(l) >= ValueDT(r)) ? 1 : 0);
+
     FreeDT(&l);
     FreeDT(&r);
     break;
@@ -450,7 +656,19 @@ Tree eval(struct ast *a)
     // v = (eval(a->l) <= eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("LesserOrEqual error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT((ValueDT(l) <= ValueDT(r)) ? 1 : 0);
+
     FreeDT(&l);
     FreeDT(&r);
     break;
@@ -459,20 +677,55 @@ Tree eval(struct ast *a)
   case ANDOP:
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("AND operation error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT((ValueDT(l) && ValueDT(r)) ? 1 : 0);
+
     FreeDT(&l);
     FreeDT(&r);
     break;
   case OROP:
     l = eval(a->l);
     r = eval(a->r);
+
+    if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
+    {
+      printf("OR operation error: at least one of the operands is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
     v = CreateDoubleDT((ValueDT(l) || ValueDT(r)) ? 1 : 0);
+
     FreeDT(&l);
     FreeDT(&r);
     break;
   case NOTOP:
     l = eval(a->l);
+
+    if (TypeDT(l) != DOUBLE)
+    {
+      printf("NOT operation error: the operand is not a number.\n");
+
+      FreeDT(&l);
+
+      break;
+    }
+
     v = CreateDoubleDT(((!ValueDT(l)) ? 1 : 0));
+
     FreeDT(&l);
     break;
 
@@ -488,8 +741,8 @@ Tree eval(struct ast *a)
         v = CopyDT(l);
         FreeDT(&l);
       }
-      else
-        v = CreateDoubleDT(0.0); /* a default value */
+      // else /* ya se contempla en el return */
+      //   v = CreateDoubleDT(0.0); /* a default value */
     }
     else
     {
@@ -499,8 +752,8 @@ Tree eval(struct ast *a)
         v = CopyDT(l);
         FreeDT(&l);
       }
-      else
-        v = CreateDoubleDT(0.0); /* a default value */
+      // else  /* ya se contempla en el return */
+      //   v = CreateDoubleDT(0.0); /* a default value */
     }
     break;
     /* while/do */
@@ -536,8 +789,10 @@ Tree eval(struct ast *a)
   default:
     printf("internal error: bad node %c\n", a->nodetype);
   }
-  return v;
+
+  return v ? v : CreateDoubleDT(0.0);
 }
+
 static Tree callbuiltin(struct fncall *f)
 {
   // TODO: verificar tipo de dato de v
@@ -560,6 +815,7 @@ static Tree callbuiltin(struct fncall *f)
     return CreateDoubleDT(0.0);
   }
 }
+
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, struct ast *func)
 {
@@ -647,7 +903,7 @@ static Tree calluser(struct ufncall *f)
 /*AGREGADO NEWELEM*/
 struct ast *newelem(char *c)
 {
-  struct elem *a = malloc(sizeof(struct elem));
+  struct elemast *a = malloc(sizeof(struct elemast));
 
   if (!a)
   {

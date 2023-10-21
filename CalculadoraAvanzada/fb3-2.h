@@ -106,8 +106,7 @@ struct symasgn
   struct ast *v; /* value */
 };
 
-/*AGREGADO*/
-struct elem
+struct elemast
 {
   int nodetype; /*type = ELEMAST*/
   char *c;
@@ -126,6 +125,7 @@ struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *
 /*AGREGADO*/
 struct ast *newelem(char *c);
 struct ast *newlogicop(int logicOpType, struct ast *l, struct ast *r);
+struct ast *newsetop(int setOpType, struct ast *l, struct ast *r);
 
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts);

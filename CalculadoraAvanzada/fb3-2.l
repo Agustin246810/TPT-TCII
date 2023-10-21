@@ -17,7 +17,7 @@ EXP ([Ee][-+]?[0-9]+)
 "*" |
 "/" |
 "=" |
-"|" |
+"%" | // cambio de "|" a "%" para el valor absoluto
 "," |
 ";" |
 "(" |

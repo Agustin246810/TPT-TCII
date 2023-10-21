@@ -211,6 +211,7 @@ void treefree(struct ast *a)
   case 'F':
   case NOTOP:
   case SETAST:
+  case LISTAST:
     treefree(a->l);
   /* no subtree */
   case 'K':
@@ -294,10 +295,11 @@ Tree eval(struct ast *a)
     v = CopyDT(((struct symasgn *)a)->s->value);
     break;
 
-  /* Set expressions */
+  /* Literal Set */
   case SETAST:
     v = CreateDT("{}"); // Se crea el conjunto originalmente vacio
-    if (a->l != NULL)   // En caso de contener expresiones, se agregan una por una
+
+    if (a->l) // En caso de contener expresiones, se agregan una por una
     {
       auxAST = a->l;
 
@@ -333,6 +335,34 @@ Tree eval(struct ast *a)
 
       v = auxDT;
       auxDT = NULL;
+    }
+    break;
+
+  /* Literal List */
+  case LISTAST:
+    v = CreateDT("[]"); // Se crea la lista originalmente vacia
+
+    if (a->l) // En caso de contener expresiones, se agregan una por una
+    {
+      auxAST = a->l;
+
+      while (auxAST->nodetype == 'L') // Se agregan las expresiones una por una
+      {
+        l = eval(auxAST->l);
+
+        Push(v, l);
+
+        FreeDT(&l);
+
+        auxAST = auxAST->r;
+      }
+
+      // Se agrega el ultimo elemento que esta en el hijo derecho de la ultima 'L'
+      l = eval(auxAST);
+
+      Push(v, l);
+
+      FreeDT(&l);
     }
     break;
 

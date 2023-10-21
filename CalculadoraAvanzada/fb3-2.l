@@ -31,13 +31,13 @@ EXP ([Ee][-+]?[0-9]+)
 "<="                    { yylval.fn = 6; return CMP; }
 
  /*Agregados*/
-"|"                     { yylval.fn = 10; return SETOP; }
-"&"                     { yylval.fn = 11; return SETOP; }
-"&!"                    { yylval.fn = 12; return SETOP; }
+"|"                     { yylval.fn = UNIONOP; return SETOP; }
+"&"                     { yylval.fn = INTERSOP; return SETOP; }
+"&!"                    { yylval.fn = DIFFOP; return SETOP; }
 
-"&&"                    { yylval.fn = 20; return LOGICOP; }
-"||"                    { yylval.fn = 21; return LOGICOP; }
-"!"                     { yylval.fn = 22; return LOGICOP; }
+"&&"                    { yylval.fn = ANDOP; return LOGICOP; }
+"||"                    { yylval.fn = OROP; return LOGICOP; }
+"!"                     { yylval.fn = NOTOP; return NOT; }
 
 "'"[a-zA-Z0-9]+ {yylval.c = yytext; return ELEM;} //La cadena se guarda junto con el '
 

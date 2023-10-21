@@ -88,6 +88,23 @@ struct ast *newcmp(int cmptype, struct ast *l, struct ast *r)
   return a;
 }
 
+struct ast *newlogicop(int logicOpType, struct ast *l, struct ast *r)
+{
+  struct ast *a = malloc(sizeof(struct ast));
+
+  if (!a)
+  {
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = logicOpType;
+  a->l = l;
+  a->r = r;
+
+  return a;
+}
+
 struct ast *newfunc(int functype, struct ast *l)
 {
   struct fncall *a = malloc(sizeof(struct fncall));
@@ -179,12 +196,15 @@ void treefree(struct ast *a)
   case '5':
   case '6':
   case 'L':
+  case ANDOP:
+  case OROP:
     treefree(a->r);
   /* one subtree */
   case '|':
   case 'M':
   case 'C':
   case 'F':
+  case NOTOP:
     treefree(a->l);
   /* no subtree */
   case 'K':
@@ -354,6 +374,27 @@ Tree eval(struct ast *a)
     FreeDT(&l);
     FreeDT(&r);
     break;
+  /* logic operations */
+  case ANDOP:
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT((ValueDT(l) && ValueDT(r)) ? 1 : 0);
+    FreeDT(&l);
+    FreeDT(&r);
+    break;
+  case OROP:
+    l = eval(a->l);
+    r = eval(a->r);
+    v = CreateDoubleDT((ValueDT(l) || ValueDT(r)) ? 1 : 0);
+    FreeDT(&l);
+    FreeDT(&r);
+    break;
+  case NOTOP:
+    l = eval(a->l);
+    v = CreateDoubleDT(((!ValueDT(l)) ? 1 : 0));
+    FreeDT(&l);
+    break;
+
     /* control flow */
     /* null expressions allowed in the grammar, so check for them */
     /* if/then/else */

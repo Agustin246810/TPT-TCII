@@ -29,7 +29,7 @@ int yylex(void);
 %token IF THEN ELSE WHILE DO LET FOREACH POP PUSH TO IN
 %right '='
 %nonassoc <fn> LOGICOP SETOP
-%nonassoc <fn> CMP //AGREGAMOS SETOP, LOGICOP y NOT
+%nonassoc <fn> CMP
 %nonassoc <fn> NOT
 %left '+' '-'
 %left '*' '/'
@@ -82,7 +82,8 @@ exp
   | ELEM                        { $$ = newelem($1); }
   | exp LOGICOP exp             { $$ = newlogicop($2, $1, $3); }
   | NOT exp                     { $$ = newlogicop($1, $2, NULL); }
-  /* TODO: agregar pop y positionElem */
+  | exp '[' exp ']'             { $$ = newast('P', $1, $3); } /* La primera posicion es 0 */
+  /* TODO: agregar pop */
 ;
 
 explist

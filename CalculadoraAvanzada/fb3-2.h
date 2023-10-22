@@ -122,7 +122,6 @@ struct ast *newasgn(struct symbol *s, struct ast *v);
 struct ast *newnum(double d);
 struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *tr);
 
-/*AGREGADO*/
 struct ast *newelem(char *c);
 struct ast *newlogicop(int logicOpType, struct ast *l, struct ast *r);
 struct ast *newsetop(int setOpType, struct ast *l, struct ast *r);

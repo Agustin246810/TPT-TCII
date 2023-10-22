@@ -218,6 +218,7 @@ void treefree(struct ast *a)
   case '5':
   case '6':
   case 'L':
+  case 'P':
   case ANDOP:
   case OROP:
   case UNIONOP:
@@ -290,8 +291,6 @@ static Tree calluser(struct ufncall *);
 
 Tree eval(struct ast *a)
 {
-  // TODO: verificar los tipos de datos.
-
   struct ast *auxAST; // variable auxiliar para recorrer un subarbol
   Tree v = NULL;
   Tree l, r, auxDT; // Auxiliares para liberar memoria
@@ -458,6 +457,85 @@ Tree eval(struct ast *a)
 
       FreeDT(&l);
     }
+    break;
+
+  /* Positioned Element */
+  case 'P':
+
+    l = eval(a->l);
+    r = eval(a->r);
+
+    if (TypeDT(l) != SET && TypeDT(l) != LIST) // Verificamos que el hijo izquierdo
+    {                                          // sea una expresion valida (SET o LIST)
+      printf("Position Element error: the first expression is not a SET or LIST.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
+    if (TypeDT(r) != DOUBLE) // Verificamos que el hijo derecho sea un numero
+    {
+      printf("Position Element error: the second expression is not a number.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
+    if (ValueDT(r) != floor(ValueDT(r))) // Verificamos que el hijo derecho sea un entero
+    {
+      printf("Position Element error: the second expression is a number but its not an integer.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
+    if (ValueDT(r) < 0) // Verificamos que no sea un negativo
+    {
+      printf("Position Element error: the second expression is an invalid value (lesser than 0).\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
+    // Verificamos que este dentro del rango del conjunto o lista
+    if (TypeDT(l) == SET)
+    {
+      if (Cardinal(l) < ValueDT(r) + 1)
+      {
+        printf("Position Element error: position out of range.\n");
+
+        FreeDT(&l);
+        FreeDT(&r);
+
+        break;
+      }
+    }
+    else
+    {
+      if (SizeL(l) < ValueDT(r) + 1)
+      {
+        printf("Position Element error: position out of range.\n");
+
+        FreeDT(&l);
+        FreeDT(&r);
+
+        break;
+      }
+    }
+
+    v = ElemDT(l, ((int)ValueDT(r)) + 1);
+
+    FreeDT(&l);
+    FreeDT(&r);
+
     break;
 
   /* expressions */

@@ -22,7 +22,7 @@ int yylex(void);
 }
 
 /* declare tokens */
-%token <d> NUMBER
+%token <d> NUMBER 
 %token <s> NAME
 %token <fn> FUNC
 %token EOL
@@ -31,7 +31,7 @@ int yylex(void);
 %nonassoc <fn> LOGICOP SETOP
 %nonassoc <fn> CMP
 %nonassoc <fn> NOT
-%left '+' '-'
+%left '+' '-' 
 %left '*' '/'
 %nonassoc '|' UMINUS
 %type <a> exp stmt list explist
@@ -84,6 +84,7 @@ exp
   | exp LOGICOP exp               { $$ = newlogicop($2, $1, $3); }
   | NOT exp                       { $$ = newlogicop($1, $2, NULL); }
   | exp '[' exp ']'               { $$ = newast('P', $1, $3); } /* La primera posicion es 0 */
+  | POP exp                       { $$ = newast(POPOP, $2, NULL); } 
   /* TODO: agregar pop */
 ;
 

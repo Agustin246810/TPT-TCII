@@ -219,6 +219,7 @@ void treefree(struct ast *a)
   case '6':
   case 'L':
   case 'P':
+  case '#':
   case ANDOP:
   case OROP:
   case UNIONOP:
@@ -426,6 +427,27 @@ Tree eval(struct ast *a)
     }
 
     v = Diff(l, r);
+
+    FreeDT(&l);
+    FreeDT(&r);
+
+    break;
+
+  case '#':
+    l = eval(a->l);
+    r = eval(a->r);
+
+    if (TypeDT(l) != SET || TypeDT(r) != SET)
+    {
+      printf("IsContainer error: at least one of the operands is not a set.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
+    v = CreateDoubleDT(IsContained(l, r) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);

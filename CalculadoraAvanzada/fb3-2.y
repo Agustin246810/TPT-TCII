@@ -12,32 +12,31 @@ int yylex(void);
 %}
 
 %union {
- struct ast *a;
- double d;
- struct symbol *s; /* which symbol */
- struct symlist *sl;
- int fn; /* which function */
- char* c;
- Tree data;
+  struct ast *a;
+  double d;
+  struct symbol *s; /* which symbol */
+  struct symlist *sl;
+  int fn; /* which function */
+  char* c;
+  Tree data;
 }
 
 /* declare tokens */
-%token <d> NUMBER 
-%token <s> NAME
-%token <fn> FUNC
 %token EOL
 %token IF THEN ELSE WHILE DO LET FOREACH POP PUSH TO IN
 %right '='
-%nonassoc <fn> LOGICOP SETOP
-%nonassoc <fn> CMP
-%nonassoc <fn> NOT
-%left '+' '-' 
+%left <fn> LOGICOP SETOP
+%left <fn> CMP
+%left '+' '-'
 %left '*' '/'
 %nonassoc '|' UMINUS
+%nonassoc <fn> NOT
+%token <d> NUMBER
+%token <s> NAME
+%token <fn> FUNC
+%token <c> ELEM
 %type <a> exp stmt list explist
 %type <sl> symlist
-%token <c> ELEM
-
 
 %start calclist
 
@@ -84,7 +83,8 @@ exp
   | exp LOGICOP exp               { $$ = newlogicop($2, $1, $3); }
   | NOT exp                       { $$ = newlogicop($1, $2, NULL); }
   | exp '[' exp ']'               { $$ = newast('P', $1, $3); } /* La primera posicion es 0 */
-  | POP exp                       { $$ = newast(POPOP, $2, NULL); } 
+  | POP exp                       { $$ = newast(POPOP, $2, NULL); }
+  | exp '#' exp                   { $$ = newast('#', $1, $3); }
   /* TODO: agregar pop */
 ;
 
@@ -124,15 +124,15 @@ calclist
 
 void yyerror(char *s, ...)
 {
- va_list ap;
- va_start(ap, s);
- fprintf(stderr, "%d: error: ", yylineno);
- vfprintf(stderr, s, ap);
- fprintf(stderr, "\n");
+  va_list ap;
+  va_start(ap, s);
+  fprintf(stderr, "%d: error: ", yylineno);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
 }
 
 int main(void)
 {
- printf("> ");
- return yyparse();
+  printf("> ");
+  return yyparse();
 }

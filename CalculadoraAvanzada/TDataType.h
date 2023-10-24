@@ -91,5 +91,8 @@ Tree Diff(Tree set1, Tree set2);
 // Devuelve 1 si el conjunto es vacio y 0 si no lo es.
 // Devuelve -1 en caso de que haya algun error en el parametro set.
 int IsVoid(Tree set);
+// Retorna 1 cuando el primer conjunto esta
+// contenido en el otro 0 cuando no lo esta.
+int IsContained(Tree set1, Tree set2);
 
 #endif

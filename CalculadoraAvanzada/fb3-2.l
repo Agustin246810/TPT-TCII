@@ -20,6 +20,7 @@ EXP ([Ee][-+]?[0-9]+)
 "%" | // cambio de "|" a "%" para el valor absoluto
 "," |
 ";" |
+"#" |
 "(" |
 ")" { return yytext[0]; }
  /* comparison ops, all are a CMP token */
@@ -47,12 +48,12 @@ EXP ([Ee][-+]?[0-9]+)
 "else"                  { return ELSE; }
 "while"                 { return WHILE; }
 "do"                    { return DO; }
-"let"                   { return LET;}
-"foreach"               { return FOREACH;}
-"pop"                   { return POP;}
-"push"                  { return PUSH;}
-"to"                    { return TO;}
-"in"                    { return IN;}
+"let"                   { return LET; }
+"foreach"               { return FOREACH; }
+"pop"                   { return POP; }
+"push"                  { return PUSH; }
+"to"                    { return TO; }
+"in"                    { return IN; }
 
  /* built-in functions */
 "sqrt"                  { yylval.fn = B_sqrt; return FUNC; }

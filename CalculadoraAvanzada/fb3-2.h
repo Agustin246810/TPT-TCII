@@ -17,6 +17,8 @@
 #define INTERSOP 601
 #define DIFFOP 602
 
+#define POPOP 700
+
 /* interface to the lexer */
 extern int yylineno; /* from lexer */
 void yyerror(char *s, ...);

@@ -233,6 +233,7 @@ void treefree(struct ast *a)
   case NOTOP:
   case SETAST:
   case LISTAST:
+  case POPOP:
     treefree(a->l);
   /* no subtree */
   case 'K':
@@ -459,6 +460,36 @@ Tree eval(struct ast *a)
     }
     break;
 
+  /*POP*/
+  case POPOP:
+
+    if (a->l->nodetype == 'N')
+      l = ((struct symref *)a->l)->s->value;
+    else
+      l = eval(a->l);
+
+    if (TypeDT(l) != LIST)
+    {
+      printf("Invalid POP: the expression is not a list.\n");
+      if (a->l->nodetype != 'N')
+        FreeDT(&l);
+      break;
+    }
+
+    if (SizeL(l) == 0)
+    {
+      printf("Invalid POP: empty list.\n");
+      if (a->l->nodetype != 'N')
+        FreeDT(&l);
+      break;
+    }
+
+    v = Pop(&l);
+
+    if (a->l->nodetype != 'N')
+      FreeDT(&l);
+
+    break;
   /* Positioned Element */
   case 'P':
 

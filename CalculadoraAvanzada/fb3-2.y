@@ -44,15 +44,16 @@ int yylex(void);
 %%
 
 stmt
-  : IF exp THEN list { $$ = newflow('I', $2, $4, NULL); }
-  | IF exp THEN list ELSE list { $$ = newflow('I', $2, $4, $6); }
-  | WHILE exp DO list { $$ = newflow('W', $2, $4, NULL); }
+  : IF exp THEN list              { $$ = newflow('I', $2, $4, NULL); }
+  | IF exp THEN list ELSE list    { $$ = newflow('I', $2, $4, $6); }
+  | WHILE exp DO list             { $$ = newflow('W', $2, $4, NULL); }
   | exp
 ;
 
 list
-  : /* nothing */ { $$ = NULL; }
-  | stmt ';' list {
+  : /* nothing */                 { $$ = NULL; }
+  | stmt ';' list
+  {
     if ($3 == NULL)
     $$ = $1;
     else
@@ -61,39 +62,39 @@ list
 ;
 
 exp
-  : exp CMP exp                 { $$ = newcmp($2, $1, $3); }
-  | exp '+' exp                 { $$ = newast('+', $1,$3); }
-  | exp '-' exp                 { $$ = newast('-', $1,$3); }
-  | exp '*' exp                 { $$ = newast('*', $1,$3); }
-  | exp '/' exp                 { $$ = newast('/', $1,$3); }
-  | '%' exp                     { $$ = newast('%', $2, NULL); }
-  | '(' exp ')'                 { $$ = $2; }
-  | '-' exp %prec UMINUS        { $$ = newast('M', $2, NULL); }
-  | NUMBER                      { $$ = newnum($1); }
-  | NAME                        { $$ = newref($1); }
-  | NAME '=' exp                { $$ = newasgn($1, $3); }
-  | FUNC '(' explist ')'        { $$ = newfunc($1, $3); }
-  | NAME '(' explist ')'        { $$ = newcall($1, $3); }
-  | '{' '}'                     { $$ = newast(SETAST, NULL, NULL); }
-  | '{' explist '}'             { $$ = newast(SETAST, $2, NULL); }
-  | '[' ']'                     { $$ = newast(LISTAST, NULL, NULL); }
-  | '[' explist ']'             { $$ = newast(LISTAST, $2, NULL); }
-  | exp SETOP exp               { $$ = newsetop($2, $1, $3); }
-  | ELEM                        { $$ = newelem($1); }
-  | exp LOGICOP exp             { $$ = newlogicop($2, $1, $3); }
-  | NOT exp                     { $$ = newlogicop($1, $2, NULL); }
-  | exp '[' exp ']'             { $$ = newast('P', $1, $3); } /* La primera posicion es 0 */
+  : exp CMP exp                   { $$ = newcmp($2, $1, $3); }
+  | exp '+' exp                   { $$ = newast('+', $1,$3); }
+  | exp '-' exp                   { $$ = newast('-', $1,$3); }
+  | exp '*' exp                   { $$ = newast('*', $1,$3); }
+  | exp '/' exp                   { $$ = newast('/', $1,$3); }
+  | '%' exp                       { $$ = newast('%', $2, NULL); }
+  | '(' exp ')'                   { $$ = $2; }
+  | '-' exp %prec UMINUS          { $$ = newast('M', $2, NULL); }
+  | NUMBER                        { $$ = newnum($1); }
+  | NAME                          { $$ = newref($1); }
+  | NAME '=' exp                  { $$ = newasgn($1, $3); }
+  | FUNC '(' explist ')'          { $$ = newfunc($1, $3); }
+  | NAME '(' explist ')'          { $$ = newcall($1, $3); }
+  | '{' '}'                       { $$ = newast(SETAST, NULL, NULL); }
+  | '{' explist '}'               { $$ = newast(SETAST, $2, NULL); }
+  | '[' ']'                       { $$ = newast(LISTAST, NULL, NULL); }
+  | '[' explist ']'               { $$ = newast(LISTAST, $2, NULL); }
+  | exp SETOP exp                 { $$ = newsetop($2, $1, $3); }
+  | ELEM                          { $$ = newelem($1); }
+  | exp LOGICOP exp               { $$ = newlogicop($2, $1, $3); }
+  | NOT exp                       { $$ = newlogicop($1, $2, NULL); }
+  | exp '[' exp ']'               { $$ = newast('P', $1, $3); } /* La primera posicion es 0 */
   /* TODO: agregar pop */
 ;
 
 explist
   : exp
-  | exp ',' explist { $$ = newast('L', $1, $3); }
+  | exp ',' explist               { $$ = newast('L', $1, $3); }
 ;
 
 symlist
-  : NAME { $$ = newsymlist($1, NULL); }
-  | NAME ',' symlist { $$ = newsymlist($1, $3); }
+  : NAME                          { $$ = newsymlist($1, NULL); }
+  | NAME ',' symlist              { $$ = newsymlist($1, $3); }
 ;
 
 calclist
@@ -112,7 +113,10 @@ calclist
     dodef($3, $5, $8);
     printf("Defined %s\n> ", $3->name);
   }
-  | calclist error EOL { yyerrok; printf("> "); }
+  | calclist error EOL
+  {
+    yyerrok; printf("> ");
+  }
 ;
 
 %%

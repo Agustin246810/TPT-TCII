@@ -78,10 +78,10 @@ exp
   | '{' explist '}'               { $$ = newast(SETAST, $2, NULL); }
   | '[' ']'                       { $$ = newast(LISTAST, NULL, NULL); }
   | '[' explist ']'               { $$ = newast(LISTAST, $2, NULL); }
-  | exp SETOP exp                 { $$ = newsetop($2, $1, $3); }
+  | exp SETOP exp                 { $$ = newast($2, $1, $3); }
   | ELEM                          { $$ = newelem($1); }
-  | exp LOGICOP exp               { $$ = newlogicop($2, $1, $3); }
-  | NOT exp                       { $$ = newlogicop($1, $2, NULL); }
+  | exp LOGICOP exp               { $$ = newast($2, $1, $3); }
+  | NOT exp                       { $$ = newast($1, $2, NULL); }
   | exp '[' exp ']'               { $$ = newast('P', $1, $3); } /* La primera posicion es 0 */
   | POP exp                       { $$ = newast(POPOP, $2, NULL); }
   | exp '#' exp                   { $$ = newast('#', $1, $3); }
@@ -101,7 +101,7 @@ calclist
   : /* nothing */
   | calclist stmt EOL
   {
-    Tree v = eval($2);
+    tData v = eval($2);
     printf("= ");
     PrintDT(v);
     printf("\n> ");

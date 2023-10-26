@@ -19,6 +19,13 @@
 
 #define POPOP 700
 
+#define GREATEROP 801
+#define LESSEROP 802
+#define NOTEQUALOP 803
+#define ISEQUALOP 804
+#define GEATEROREQUALOP 805
+#define LESSEROREQUALOP 806
+
 /* interface to the lexer */
 extern int yylineno; /* from lexer */
 void yyerror(char *s, ...);
@@ -66,53 +73,91 @@ enum bifs
 };
 /* nodes in the abstract syntax tree */
 /* all have common initial nodetype */
+
 struct ast
 {
   int nodetype;
-  struct ast *l;
-  struct ast *r;
-};
-struct fncall
-{               /* built-in function */
-  int nodetype; /* type F */
-  struct ast *l;
-  enum bifs functype;
-};
-struct ufncall
-{                /* user function */
-  int nodetype;  /* type C */
-  struct ast *l; /* list of arguments */
-  struct symbol *s;
-};
-struct flow
-{
-  int nodetype;     /* type I or W */
-  struct ast *cond; /* condition */
-  struct ast *tl;   /* then branch or do list */
-  struct ast *el;   /* optional else branch */
-};
-struct numval
-{
-  int nodetype; /* type K */
-  double number;
-};
-struct symref
-{
-  int nodetype; /* type N */
-  struct symbol *s;
-};
-struct symasgn
-{
-  int nodetype; /* type = */
-  struct symbol *s;
-  struct ast *v; /* value */
+  union
+  {
+    struct // para el ast
+    {
+      struct ast *l;
+      struct ast *r;
+    };
+    struct // para el fncall
+    {
+      struct ast *l;
+      enum bifs functype;
+    };
+    struct // para el ufncall
+    {
+      struct ast *l;
+      struct symbol *s;
+    };
+    struct // para el flow
+    {
+      struct ast *cond; /* condition */
+      struct ast *tl;   /* then branch or do list */
+      struct ast *el;   /* optional else branch */
+    };
+    double number;    // para el numval
+    struct symbol *s; // para el symref
+    struct            // para el symasgn
+    {
+      struct symbol *s;
+      struct ast *v; /* value */
+    };
+    char *c; // para el elemast
+  };
 };
 
-struct elemast
-{
-  int nodetype; /*type = ELEMAST*/
-  char *c;
-};
+// struct ast
+// {
+//   int nodetype;
+//   struct ast *l;
+//   struct ast *r;
+// };
+// struct fncall
+// {               /* built-in function */
+//   int nodetype; /* type F */
+//   struct ast *l;
+//   enum bifs functype;
+// };
+// struct ufncall
+// {                /* user function */
+//   int nodetype;  /* type C */
+//   struct ast *l; /* list of arguments */
+//   struct symbol *s;
+// };
+// struct flow
+// {
+//   int nodetype;     /* type I or W */
+//   struct ast *cond; /* condition */
+//   struct ast *tl;   /* then branch or do list */
+//   struct ast *el;   /* optional else branch */
+// };
+// struct numval
+// {
+//   int nodetype; /* type K */
+//   double number;
+// };
+// struct symref
+// {
+//   int nodetype; /* type N */
+//   struct symbol *s;
+// };
+// struct symasgn
+// {
+//   int nodetype; /* type = */
+//   struct symbol *s;
+//   struct ast *v; /* value */
+// };
+
+// struct elemast
+// {
+//   int nodetype; /*type = ELEMAST*/
+//   char *c;
+// };
 
 /* build an AST */
 struct ast *newast(int nodetype, struct ast *l, struct ast *r);
@@ -125,8 +170,6 @@ struct ast *newnum(double d);
 struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *tr);
 
 struct ast *newelem(char *c);
-struct ast *newlogicop(int logicOpType, struct ast *l, struct ast *r);
-struct ast *newsetop(int setOpType, struct ast *l, struct ast *r);
 
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts);

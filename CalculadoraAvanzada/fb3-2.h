@@ -23,7 +23,7 @@
 #define LESSEROP 802
 #define NOTEQUALOP 803
 #define ISEQUALOP 804
-#define GEATEROREQUALOP 805
+#define GREATEROREQUALOP 805
 #define LESSEROREQUALOP 806
 
 /* interface to the lexer */
@@ -79,30 +79,24 @@ struct ast
   int nodetype;
   union
   {
-    struct // para el ast
+    struct // para el ast, fncall y ufncall
     {
       struct ast *l;
-      struct ast *r;
-    };
-    struct // para el fncall
-    {
-      struct ast *l;
-      enum bifs functype;
-    };
-    struct // para el ufncall
-    {
-      struct ast *l;
-      struct symbol *s;
+      union
+      {
+        struct ast *r;      // ast
+        enum bifs functype; // fncall
+        struct symbol *sym; // ufncall
+      };
     };
     struct // para el flow
     {
-      struct ast *cond; /* condition */
-      struct ast *tl;   /* then branch or do list */
-      struct ast *el;   /* optional else branch */
+      struct ast *cond; // condition
+      struct ast *tl;   // then branch or do list
+      struct ast *el;   // optional else branch
     };
-    double number;    // para el numval
-    struct symbol *s; // para el symref
-    struct            // para el symasgn
+    double number; // para el numval
+    struct         // para el symref y symasgn
     {
       struct symbol *s;
       struct ast *v; /* value */

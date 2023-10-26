@@ -61,7 +61,7 @@ struct ast *newast(int nodetype, struct ast *l, struct ast *r)
 
 struct ast *newnum(double d)
 {
-  struct numval *a = malloc(sizeof(struct numval));
+  struct ast *a = malloc(sizeof(struct ast));
 
   if (!a)
   {
@@ -82,49 +82,15 @@ struct ast *newcmp(int cmptype, struct ast *l, struct ast *r)
     yyerror("out of space");
     exit(0);
   }
-  a->nodetype = '0' + cmptype;
+  a->nodetype = cmptype;
   a->l = l;
   a->r = r;
-  return a;
-}
-
-struct ast *newlogicop(int logicOpType, struct ast *l, struct ast *r) // TODO: es igual que usar newsetop()
-{
-  struct ast *a = malloc(sizeof(struct ast));
-
-  if (!a)
-  {
-    yyerror("out of space");
-    exit(0);
-  }
-
-  a->nodetype = logicOpType;
-  a->l = l;
-  a->r = r;
-
-  return a;
-}
-
-struct ast *newsetop(int setOpType, struct ast *l, struct ast *r) // TODO: es igual que usar newlogicop()
-{
-  struct ast *a = malloc(sizeof(struct ast));
-
-  if (!a)
-  {
-    yyerror("out of space");
-    exit(0);
-  }
-
-  a->nodetype = setOpType;
-  a->l = l;
-  a->r = r;
-
   return a;
 }
 
 struct ast *newfunc(int functype, struct ast *l)
 {
-  struct fncall *a = malloc(sizeof(struct fncall));
+  struct ast *a = malloc(sizeof(struct ast));
 
   if (!a)
   {
@@ -134,12 +100,12 @@ struct ast *newfunc(int functype, struct ast *l)
   a->nodetype = 'F';
   a->l = l;
   a->functype = functype;
-  return (struct ast *)a;
+  return a;
 }
 
 struct ast *newcall(struct symbol *s, struct ast *l)
 {
-  struct ufncall *a = malloc(sizeof(struct ufncall));
+  struct ast *a = malloc(sizeof(struct ast));
 
   if (!a)
   {
@@ -149,12 +115,12 @@ struct ast *newcall(struct symbol *s, struct ast *l)
   a->nodetype = 'C';
   a->l = l;
   a->s = s;
-  return (struct ast *)a;
+  return a;
 }
 
 struct ast *newref(struct symbol *s)
 {
-  struct symref *a = malloc(sizeof(struct symref));
+  struct ast *a = malloc(sizeof(struct ast));
 
   if (!a)
   {
@@ -168,7 +134,7 @@ struct ast *newref(struct symbol *s)
 
 struct ast *newasgn(struct symbol *s, struct ast *v)
 {
-  struct symasgn *a = malloc(sizeof(struct symasgn));
+  struct ast *a = malloc(sizeof(struct ast));
   if (!a)
   {
     yyerror("out of space");
@@ -177,12 +143,12 @@ struct ast *newasgn(struct symbol *s, struct ast *v)
   a->nodetype = '=';
   a->s = s;
   a->v = v;
-  return (struct ast *)a;
+  return a;
 }
 
 struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *el)
 {
-  struct flow *a = malloc(sizeof(struct flow));
+  struct ast *a = malloc(sizeof(struct ast));
 
   if (!a)
   {
@@ -193,7 +159,7 @@ struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *
   a->cond = cond;
   a->tl = tl;
   a->el = el;
-  return (struct ast *)a;
+  return a;
 }
 
 /* free a tree of ASTs */
@@ -211,12 +177,12 @@ void treefree(struct ast *a)
   case '-':
   case '*':
   case '/':
-  case '1':
-  case '2':
-  case '3':
-  case '4':
-  case '5':
-  case '6':
+  case GREATEROP:
+  case LESSEROP:
+  case NOTEQUALOP:
+  case ISEQUALOP:
+  case GEATEROREQUALOP:
+  case LESSEROREQUALOP:
   case 'L':
   case 'P':
   case '#':
@@ -241,19 +207,19 @@ void treefree(struct ast *a)
   case 'N':
     break;
   case '=':
-    free(((struct symasgn *)a)->v);
+    free(a->v);
     break;
     /* up to three subtrees */
   case 'I':
   case 'W':
-    free(((struct flow *)a)->cond);
-    if (((struct flow *)a)->tl)
-      treefree(((struct flow *)a)->tl);
-    if (((struct flow *)a)->el)
-      treefree(((struct flow *)a)->el);
+    free(a->cond);
+    if (a->tl)
+      treefree(a->tl);
+    if (a->el)
+      treefree(a->el);
     break;
   case ELEMAST:
-    free(((struct elemast *)a)->c);
+    free(a->c);
     break;
   default:
     printf("internal error: free bad node %c\n", a->nodetype);
@@ -288,8 +254,8 @@ void symlistfree(struct symlist *sl)
   }
 }
 
-static tData callbuiltin(struct fncall *);
-static tData calluser(struct ufncall *);
+static tData callbuiltin(struct ast *);
+static tData calluser(struct ast *);
 
 tData eval(struct ast *a)
 {
@@ -306,19 +272,19 @@ tData eval(struct ast *a)
   /* constant */
   case 'K':
     // v = ((struct numval *)a)->number;
-    v = CreateDoubleDT(((struct numval *)a)->number);
+    v = CreateDoubleDT(a->number);
     break;
   /* name reference */
   case 'N':
     // v = ((struct symref *)a)->s->value;
-    v = CopyDT(((struct symref *)a)->s->value);
+    v = CopyDT(a->s->value);
     break;
   /* assignment */
   case '=':
     // v = ((struct symasgn *)a)->s->value = eval(((struct symasgn *)a)->v);
-    l = eval(((struct symasgn *)a)->v);
+    l = eval(a->v);
 
-    ((struct symasgn *)a)->s->value = CopyDT(l);
+    a->s->value = CopyDT(l);
     v = CopyDT(l);
 
     FreeDT(&l);
@@ -326,7 +292,7 @@ tData eval(struct ast *a)
 
   /* Elem */
   case ELEMAST:
-    v = CreateDT(((struct elemast *)a)->c);
+    v = CreateDT(a->c);
     break;
 
   /* Literal Set */
@@ -490,7 +456,7 @@ tData eval(struct ast *a)
   case POPOP:
 
     if (a->l->nodetype == 'N')
-      l = ((struct symref *)a->l)->s->value;
+      l = a->l->s->value;
     else
       l = eval(a->l);
 
@@ -705,7 +671,7 @@ tData eval(struct ast *a)
     FreeDT(&l);
     break;
   /* comparisons */
-  case '1':
+  case GREATEROP:
     // v = (eval(a->l) > eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
@@ -725,7 +691,7 @@ tData eval(struct ast *a)
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case '2':
+  case LESSEROP:
     // v = (eval(a->l) < eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
@@ -745,7 +711,7 @@ tData eval(struct ast *a)
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case '3': // Esta operacion funciona para conjuntos, listas, numeros y elementos.
+  case NOTEQUALOP: // Esta operacion funciona para conjuntos, listas, numeros y elementos.
     // v = (eval(a->l) != eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
@@ -756,7 +722,7 @@ tData eval(struct ast *a)
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case '4': // Esta operacion funciona para conjuntos, listas, numeros y elementos.
+  case ISEQUALOP: // Esta operacion funciona para conjuntos, listas, numeros y elementos.
     // v = (eval(a->l) == eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
@@ -767,7 +733,7 @@ tData eval(struct ast *a)
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case '5':
+  case GEATEROREQUALOP:
     // v = (eval(a->l) >= eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
@@ -787,7 +753,7 @@ tData eval(struct ast *a)
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case '6':
+  case LESSEROREQUALOP:
     // v = (eval(a->l) <= eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
@@ -868,11 +834,11 @@ tData eval(struct ast *a)
     /* null expressions allowed in the grammar, so check for them */
     /* if/then/else */
   case 'I':
-    if (ValueDT(eval(((struct flow *)a)->cond)) != 0)
+    if (ValueDT(eval(a->cond)) != 0)
     {
-      if (((struct flow *)a)->tl)
+      if (a->tl)
       {
-        l = eval(((struct flow *)a)->tl);
+        l = eval(a->tl);
         v = CopyDT(l);
         FreeDT(&l);
       }
@@ -881,9 +847,9 @@ tData eval(struct ast *a)
     }
     else
     {
-      if (((struct flow *)a)->el)
+      if (a->el)
       {
-        l = eval(((struct flow *)a)->el);
+        l = eval(a->el);
         v = CopyDT(l);
         FreeDT(&l);
       }
@@ -895,11 +861,11 @@ tData eval(struct ast *a)
   case 'W':
     v = CreateDoubleDT(0.0); /* a default value */
 
-    if (((struct flow *)a)->tl)
+    if (a->tl)
     {
-      while (ValueDT(eval(((struct flow *)a)->cond)) != 0)
+      while (ValueDT(eval(a->cond)) != 0)
       {
-        l = eval(((struct flow *)a)->tl);
+        l = eval(a->tl);
         v = CopyDT(l);
         FreeDT(&l);
       }
@@ -912,12 +878,12 @@ tData eval(struct ast *a)
     v = eval(a->r);
     break;
   case 'F':
-    l = callbuiltin((struct fncall *)a);
+    l = callbuiltin(a);
     v = CopyDT(l);
     FreeDT(&l);
     break;
   case 'C':
-    l = calluser((struct ufncall *)a);
+    l = calluser(a);
     v = CopyDT(l);
     FreeDT(&l);
     break;
@@ -928,7 +894,7 @@ tData eval(struct ast *a)
   return v ? v : CreateDoubleDT(0.0);
 }
 
-static tData callbuiltin(struct fncall *f)
+static tData callbuiltin(struct ast *f)
 {
   // TODO: verificar tipo de dato de v
 
@@ -962,7 +928,7 @@ void dodef(struct symbol *name, struct symlist *syms, struct ast *func)
   name->func = func;
 }
 
-static tData calluser(struct ufncall *f)
+static tData calluser(struct ast *f)
 {
   struct symbol *fn = f->s; /* function name */
   struct symlist *sl;       /* dummy arguments */
@@ -1038,7 +1004,7 @@ static tData calluser(struct ufncall *f)
 /*AGREGADO NEWELEM*/
 struct ast *newelem(char *c)
 {
-  struct elemast *a = malloc(sizeof(struct elemast));
+  struct ast *a = malloc(sizeof(struct ast));
 
   if (!a)
   {

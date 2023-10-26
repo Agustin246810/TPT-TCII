@@ -27,20 +27,20 @@ EXP ([Ee][-+]?[0-9]+)
 ")" { return yytext[0]; }
 
  /* comparison ops, all are a CMP token */
-">"                     { yylval.fn = 1; return CMP; }
-"<"                     { yylval.fn = 2; return CMP; }
-"!="                    { yylval.fn = 3; return CMP; }
-"=="                    { yylval.fn = 4; return CMP; }
-">="                    { yylval.fn = 5; return CMP; }
-"<="                    { yylval.fn = 6; return CMP; }
+">"                     { yylval.fn = GREATEROP;        return CMP; }
+"<"                     { yylval.fn = LESSEROP;         return CMP; }
+"!="                    { yylval.fn = NOTEQUALOP;       return CMP; }
+"=="                    { yylval.fn = ISEQUALOP;        return CMP; }
+">="                    { yylval.fn = GREATEROREQUALOP; return CMP; }
+"<="                    { yylval.fn = LESSEROREQUALOP;  return CMP; }
 
-"|"                     { yylval.fn = UNIONOP; return SETOP; }
-"&"                     { yylval.fn = INTERSOP; return SETOP; }
-"&!"                    { yylval.fn = DIFFOP; return SETOP; }
+"|"                     { yylval.fn = UNIONOP;          return SETOP; }
+"&"                     { yylval.fn = INTERSOP;         return SETOP; }
+"&!"                    { yylval.fn = DIFFOP;           return SETOP; }
 
-"&&"                    { yylval.fn = ANDOP; return LOGICOP; }
-"||"                    { yylval.fn = OROP; return LOGICOP; }
-"!"                     { yylval.fn = NOTOP; return NOT; }
+"&&"                    { yylval.fn = ANDOP;            return LOGICOP; }
+"||"                    { yylval.fn = OROP;             return LOGICOP; }
+"!"                     { yylval.fn = NOTOP;            return NOT; }
 
 "'"[a-zA-Z0-9]+         { yylval.c = yytext; return ELEM;} //La cadena se guarda junto con el '
 

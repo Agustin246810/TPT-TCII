@@ -114,7 +114,7 @@ struct ast *newcall(struct symbol *s, struct ast *l)
   }
   a->nodetype = 'C';
   a->l = l;
-  a->s = s;
+  a->sym = s; // sym por ser ufncall
   return a;
 }
 
@@ -181,7 +181,7 @@ void treefree(struct ast *a)
   case LESSEROP:
   case NOTEQUALOP:
   case ISEQUALOP:
-  case GEATEROREQUALOP:
+  case GREATEROREQUALOP:
   case LESSEROREQUALOP:
   case 'L':
   case 'P':
@@ -271,17 +271,14 @@ tData eval(struct ast *a)
   {
   /* constant */
   case 'K':
-    // v = ((struct numval *)a)->number;
     v = CreateDoubleDT(a->number);
     break;
   /* name reference */
   case 'N':
-    // v = ((struct symref *)a)->s->value;
     v = CopyDT(a->s->value);
     break;
   /* assignment */
   case '=':
-    // v = ((struct symasgn *)a)->s->value = eval(((struct symasgn *)a)->v);
     l = eval(a->v);
 
     a->s->value = CopyDT(l);
@@ -733,7 +730,7 @@ tData eval(struct ast *a)
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case GEATEROREQUALOP:
+  case GREATEROREQUALOP:
     // v = (eval(a->l) >= eval(a->r)) ? 1 : 0;
     l = eval(a->l);
     r = eval(a->r);
@@ -930,10 +927,11 @@ void dodef(struct symbol *name, struct symlist *syms, struct ast *func)
 
 static tData calluser(struct ast *f)
 {
-  struct symbol *fn = f->s; /* function name */
-  struct symlist *sl;       /* dummy arguments */
-  struct ast *args = f->l;  /* actual arguments */
-  double *oldval, *newval;  /* saved arg values */
+  // sym por ser ufncall
+  struct symbol *fn = f->sym; /* function name */
+  struct symlist *sl;         /* dummy arguments */
+  struct ast *args = f->l;    /* actual arguments */
+  double *oldval, *newval;    /* saved arg values */
   double v;
   int nargs;
   int i;

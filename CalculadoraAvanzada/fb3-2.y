@@ -18,7 +18,7 @@ int yylex(void);
   struct symlist *sl;
   int fn; /* which function */
   char* c;
-  Tree data;
+  tData data;
 }
 
 /* declare tokens */

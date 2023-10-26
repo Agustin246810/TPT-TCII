@@ -7,23 +7,23 @@ void _GetElement(TString *s, TString *aux);
 
 // Imprime recursivamente los elementos de
 // un arbol omitiendo los corchetes y llaves.
-void _PrintDTrec(Tree tree);
+void _PrintDTrec(tData tree);
 
 // Retorna una cadena nueva sin las llaves ni corchetes.
 TString _RemoveBrackets(TString s);
 
 // Retorna un puntero a un DataType de tipo STR con una cadena s.
-Tree _CreateSingleDTStr(TString s);
+tData _CreateSingleDTStr(TString s);
 
 // Retorna un puntero a un DataType de tipo SET con hijos nulos.
-Tree _CreateSingleDTSet();
+tData _CreateSingleDTSet();
 
 // Retorna un puntero a un DataType de tipo LIST con hijos nulos.
-Tree _CreateSingleDTList();
+tData _CreateSingleDTList();
 
-Tree CopyDT(Tree original)
+tData CopyDT(tData original)
 {
-  Tree copy = NULL;
+  tData copy = NULL;
 
   if (original == NULL)
   {
@@ -52,7 +52,7 @@ Tree CopyDT(Tree original)
   }
 }
 
-int IsContained(Tree set1, Tree set2)
+int IsContained(tData set1, tData set2)
 {
   if (set1 == NULL) // Retorna 1 para la llamada recursiva
   {
@@ -82,7 +82,7 @@ int IsContained(Tree set1, Tree set2)
   return IsContained(set1->next, set2); // Verificamos para el elemento n+1
 }
 
-int CompareDT(Tree elem1, Tree elem2)
+int CompareDT(tData elem1, tData elem2)
 {
   if (elem1 == NULL || elem2 == NULL)
   {
@@ -131,9 +131,9 @@ TString _RemoveBrackets(TString s)
   return aux;
 }
 
-Tree _CreateSingleDTStr(TString s)
+tData _CreateSingleDTStr(TString s)
 {
-  Tree newDataType = (Tree)malloc(sizeof(struct DataType));
+  tData newDataType = (tData)malloc(sizeof(struct DataType));
 
   newDataType->nodeType = STR;
   newDataType->dataStr = strdup(s);
@@ -141,9 +141,9 @@ Tree _CreateSingleDTStr(TString s)
   return newDataType;
 }
 
-Tree _CreateSingleDTSet()
+tData _CreateSingleDTSet()
 {
-  Tree newDataType = (Tree)malloc(sizeof(struct DataType));
+  tData newDataType = (tData)malloc(sizeof(struct DataType));
 
   newDataType->nodeType = SET;
   newDataType->data = NULL;
@@ -152,9 +152,9 @@ Tree _CreateSingleDTSet()
   return newDataType;
 }
 
-Tree _CreateSingleDTList()
+tData _CreateSingleDTList()
 {
-  Tree newDataType = (Tree)malloc(sizeof(struct DataType));
+  tData newDataType = (tData)malloc(sizeof(struct DataType));
 
   newDataType->nodeType = LIST;
   newDataType->data = NULL;
@@ -163,9 +163,9 @@ Tree _CreateSingleDTList()
   return newDataType;
 }
 
-Tree CreateDT(TString s)
+tData CreateDT(TString s)
 {
-  Tree newTree = NULL, aux = NULL, aux2 = NULL;
+  tData newTree = NULL, aux = NULL, aux2 = NULL;
   TString element = NULL;
 
   switch (s[0])
@@ -242,7 +242,7 @@ Tree CreateDT(TString s)
   return newTree;
 }
 
-void PrintDT(Tree tree)
+void PrintDT(tData tree)
 {
   if (tree != NULL)
   {
@@ -354,7 +354,7 @@ void _GetElement(TString *s, TString *aux)
   }
 }
 
-void _PrintDTrec(Tree tree)
+void _PrintDTrec(tData tree)
 {
   if (tree != NULL)
   {
@@ -380,7 +380,7 @@ void _PrintDTrec(Tree tree)
   }
 }
 
-int SizeL(Tree L)
+int SizeL(tData L)
 {
   if (L == NULL)
   {
@@ -408,7 +408,7 @@ int SizeL(Tree L)
   return count;
 }
 
-int Cardinal(Tree S)
+int Cardinal(tData S)
 {
 
   if (S == NULL)
@@ -437,12 +437,12 @@ int Cardinal(Tree S)
   return count;
 }
 
-int TypeDT(Tree d)
+int TypeDT(tData d)
 {
   return d->nodeType;
 }
 
-TString StrDT(Tree d)
+TString StrDT(tData d)
 {
   if (d == NULL)
   {
@@ -462,7 +462,7 @@ TString StrDT(Tree d)
   return d->dataStr;
 }
 
-double ValueDT(Tree d)
+double ValueDT(tData d)
 {
   if (!d)
   {
@@ -479,7 +479,7 @@ double ValueDT(Tree d)
   return d->value;
 }
 
-Tree ElemDT(Tree CL, int pos)
+tData ElemDT(tData CL, int pos)
 {
   if (CL == NULL)
   {
@@ -505,7 +505,7 @@ Tree ElemDT(Tree CL, int pos)
   return CL->data;
 }
 
-void Push(Tree L, Tree elem)
+void Push(tData L, tData elem)
 {
   if (L != NULL)
   {
@@ -529,11 +529,11 @@ void Push(Tree L, Tree elem)
   }
 }
 
-Tree Pop(Tree *L)
+tData Pop(tData *L)
 {
-  Tree aux = NULL;
-  Tree newTree = NULL;
-  Tree prev = NULL;
+  tData aux = NULL;
+  tData newTree = NULL;
+  tData prev = NULL;
 
   if ((*L) == NULL) // Si llega NULL por parametro
   {
@@ -573,7 +573,7 @@ Tree Pop(Tree *L)
   return newTree;
 }
 
-void FreeDT(Tree *d)
+void FreeDT(tData *d)
 {
   if ((*d) != NULL)
   {
@@ -601,7 +601,7 @@ void FreeDT(Tree *d)
   }
 }
 
-int In(Tree set, Tree elem)
+int In(tData set, tData elem)
 {
   if (set == NULL || elem == NULL) // Por si algun parametro ingresado es nulo
   {                                // Debe devolver 0 para la llamada recursiva
@@ -626,10 +626,10 @@ int In(Tree set, Tree elem)
   return (In(set->next, elem));
 }
 
-Tree Union(Tree set1, Tree set2)
+tData Union(tData set1, tData set2)
 {
-  Tree newSet = NULL;
-  Tree aux = NULL;
+  tData newSet = NULL;
+  tData aux = NULL;
 
   if (set1 == NULL || set2 == NULL)
   {
@@ -674,9 +674,9 @@ Tree Union(Tree set1, Tree set2)
   return newSet;
 }
 
-Tree Inter(Tree set1, Tree set2)
+tData Inter(tData set1, tData set2)
 {
-  Tree newSet = NULL, aux = NULL;
+  tData newSet = NULL, aux = NULL;
 
   if (set1 == NULL || set2 == NULL)
   {
@@ -717,9 +717,9 @@ Tree Inter(Tree set1, Tree set2)
   return newSet != NULL ? newSet : _CreateSingleDTSet();
 }
 
-Tree Diff(Tree set1, Tree set2)
+tData Diff(tData set1, tData set2)
 {
-  Tree newSet = NULL, aux = NULL;
+  tData newSet = NULL, aux = NULL;
 
   if (set1 == NULL || set2 == NULL)
   {
@@ -765,7 +765,7 @@ Tree Diff(Tree set1, Tree set2)
   return newSet != NULL ? newSet : _CreateSingleDTSet();
 }
 
-int IsVoid(Tree set)
+int IsVoid(tData set)
 {
   if (set == NULL)
   {
@@ -788,9 +788,9 @@ int IsVoid(Tree set)
   }
 }
 
-Tree CreateDT2(int type, TString s)
+tData CreateDT2(int type, TString s)
 {
-  Tree newTree = NULL;
+  tData newTree = NULL;
 
   switch (type)
   {
@@ -812,9 +812,9 @@ Tree CreateDT2(int type, TString s)
   }
 }
 
-Tree CreateDT3(int type, Tree elem)
+tData CreateDT3(int type, tData elem)
 {
-  Tree newTree = NULL;
+  tData newTree = NULL;
 
   if (elem == NULL)
   {
@@ -838,9 +838,9 @@ Tree CreateDT3(int type, Tree elem)
   }
 }
 
-Tree CreateDoubleDT(double value)
+tData CreateDoubleDT(double value)
 {
-  Tree newTree = (Tree)malloc(sizeof(struct DataType));
+  tData newTree = (tData)malloc(sizeof(struct DataType));
 
   if (!newTree)
   {
@@ -856,8 +856,8 @@ Tree CreateDoubleDT(double value)
   return newTree;
 }
 
-Tree CreateNullDT()
+tData CreateNullDT()
 {
-  Tree NullDT = NULL;
+  tData NullDT = NULL;
   return NullDT;
 }

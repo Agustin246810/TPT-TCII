@@ -26,7 +26,7 @@ void yyerror(char *s, ...);
 struct symbol
 { /* a variable name */
   char *name;
-  Tree value;
+  tData value;
   struct ast *func;     /* stmt for the function */
   struct symlist *syms; /* list of dummy args */
 };
@@ -131,7 +131,7 @@ struct ast *newsetop(int setOpType, struct ast *l, struct ast *r);
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts);
 /* evaluate an AST */
-Tree eval(struct ast *);
+tData eval(struct ast *);
 /* delete and free an AST */
 void treefree(struct ast *);
 /* interface to the lexer */

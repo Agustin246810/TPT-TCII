@@ -85,7 +85,6 @@ exp
   | exp '[' exp ']'               { $$ = newast('P', $1, $3); } /* La primera posicion es 0 */
   | POP exp                       { $$ = newast(POPOP, $2, NULL); }
   | exp '#' exp                   { $$ = newast('#', $1, $3); }
-  /* TODO: agregar pop */
 ;
 
 explist

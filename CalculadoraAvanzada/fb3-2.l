@@ -4,8 +4,10 @@
 # include "fb3-2.h"
 # include "fb3-2.tab.h"
 %}
+
 /* float exponent */
 EXP ([Ee][-+]?[0-9]+)
+
 %%
  /* single character ops */
 "{" |
@@ -20,9 +22,10 @@ EXP ([Ee][-+]?[0-9]+)
 "%" | // cambio de "|" a "%" para el valor absoluto
 "," |
 ";" |
-"#" |
+"#" | // estaContenidoEn
 "(" |
 ")" { return yytext[0]; }
+
  /* comparison ops, all are a CMP token */
 ">"                     { yylval.fn = 1; return CMP; }
 "<"                     { yylval.fn = 2; return CMP; }
@@ -31,7 +34,6 @@ EXP ([Ee][-+]?[0-9]+)
 ">="                    { yylval.fn = 5; return CMP; }
 "<="                    { yylval.fn = 6; return CMP; }
 
- /*Agregados*/
 "|"                     { yylval.fn = UNIONOP; return SETOP; }
 "&"                     { yylval.fn = INTERSOP; return SETOP; }
 "&!"                    { yylval.fn = DIFFOP; return SETOP; }
@@ -40,7 +42,7 @@ EXP ([Ee][-+]?[0-9]+)
 "||"                    { yylval.fn = OROP; return LOGICOP; }
 "!"                     { yylval.fn = NOTOP; return NOT; }
 
-"'"[a-zA-Z0-9]+ {yylval.c = yytext; return ELEM;} //La cadena se guarda junto con el '
+"'"[a-zA-Z0-9]+         { yylval.c = yytext; return ELEM;} //La cadena se guarda junto con el '
 
  /* keywords */
 "if"                    { return IF; }

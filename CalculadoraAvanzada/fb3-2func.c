@@ -288,14 +288,14 @@ void symlistfree(struct symlist *sl)
   }
 }
 
-static Tree callbuiltin(struct fncall *);
-static Tree calluser(struct ufncall *);
+static tData callbuiltin(struct fncall *);
+static tData calluser(struct ufncall *);
 
-Tree eval(struct ast *a)
+tData eval(struct ast *a)
 {
   struct ast *auxAST; // variable auxiliar para recorrer un subarbol
-  Tree v = NULL;
-  Tree l, r, auxDT; // Auxiliares para liberar memoria
+  tData v = NULL;
+  tData l, r, auxDT; // Auxiliares para liberar memoria
   if (!a)
   {
     yyerror("internal error, null eval");
@@ -316,8 +316,12 @@ Tree eval(struct ast *a)
   /* assignment */
   case '=':
     // v = ((struct symasgn *)a)->s->value = eval(((struct symasgn *)a)->v);
-    ((struct symasgn *)a)->s->value = CopyDT(eval(((struct symasgn *)a)->v));
-    v = CopyDT(((struct symasgn *)a)->s->value);
+    l = eval(((struct symasgn *)a)->v);
+
+    ((struct symasgn *)a)->s->value = CopyDT(l);
+    v = CopyDT(l);
+
+    FreeDT(&l);
     break;
 
   /* Elem */
@@ -924,7 +928,7 @@ Tree eval(struct ast *a)
   return v ? v : CreateDoubleDT(0.0);
 }
 
-static Tree callbuiltin(struct fncall *f)
+static tData callbuiltin(struct fncall *f)
 {
   // TODO: verificar tipo de dato de v
 
@@ -958,7 +962,7 @@ void dodef(struct symbol *name, struct symlist *syms, struct ast *func)
   name->func = func;
 }
 
-static Tree calluser(struct ufncall *f)
+static tData calluser(struct ufncall *f)
 {
   struct symbol *fn = f->s; /* function name */
   struct symlist *sl;       /* dummy arguments */

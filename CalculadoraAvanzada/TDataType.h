@@ -63,7 +63,7 @@ double ValueDT(tData d);
 /*Operaciones con SET y LIST*/
 
 // Devuelve el elemento en una determinada posicion
-// dentro de un conjunto o una lista.
+// dentro de un conjunto o una lista. (No una copia)
 tData ElemDT(tData CL, int pos);
 
 /*Operaciones con LIST*/

@@ -12,7 +12,7 @@ int yylex(void);
 %}
 
 %union {
-  struct ast *a;
+  ast a;
   double d;
   struct symbol *s; /* which symbol */
   struct symlist *sl;
@@ -23,18 +23,22 @@ int yylex(void);
 
 /* declare tokens */
 %token EOL
-%token IF THEN ELSE WHILE DO LET FOREACH POP PUSH TO IN
+%token IF ELSE WHILE LET FOREACH PUSH TO IN
 %right '='
-%left <fn> LOGICOP SETOP
+%left <fn> LOGICOP
+%left <fn> SETOP
+%left '['
+%left '#'
 %left <fn> CMP
+%left POP
 %left '+' '-'
 %left '*' '/'
-%nonassoc '|' UMINUS
+%nonassoc '%' UMINUS
 %nonassoc <fn> NOT
-%token <d> NUMBER
-%token <s> NAME
-%token <fn> FUNC
 %token <c> ELEM
+%token <s> NAME
+%token <d> NUMBER
+%token <fn> FUNC
 %type <a> exp stmt list explist
 %type <sl> symlist
 
@@ -43,9 +47,9 @@ int yylex(void);
 %%
 
 stmt
-  : IF exp THEN list              { $$ = newflow('I', $2, $4, NULL); }
-  | IF exp THEN list ELSE list    { $$ = newflow('I', $2, $4, $6); }
-  | WHILE exp DO list             { $$ = newflow('W', $2, $4, NULL); }
+  : IF '(' exp ')' '{' list '}'                      { $$ = newflow(IFAST, $3, $6, NULL); }
+  | IF '(' exp ')' '{' list '}' ELSE '{' list '}'    { $$ = newflow(IFAST, $3, $6, $10); }
+  | WHILE '(' exp ')' '{' list '}'                     { $$ = newflow(WHILEAST, $3, $6, NULL); }
   | exp
 ;
 
@@ -66,9 +70,9 @@ exp
   | exp '-' exp                   { $$ = newast('-', $1,$3); }
   | exp '*' exp                   { $$ = newast('*', $1,$3); }
   | exp '/' exp                   { $$ = newast('/', $1,$3); }
-  | '%' exp                       { $$ = newast('%', $2, NULL); }
+  | '%' exp                       { $$ = newast(ABSVALUEAST, $2, NULL); }
   | '(' exp ')'                   { $$ = $2; }
-  | '-' exp %prec UMINUS          { $$ = newast('M', $2, NULL); }
+  | '-' exp %prec UMINUS          { $$ = newast(UMINUSOP, $2, NULL); }
   | NUMBER                        { $$ = newnum($1); }
   | NAME                          { $$ = newref($1); }
   | NAME '=' exp                  { $$ = newasgn($1, $3); }
@@ -81,10 +85,10 @@ exp
   | exp SETOP exp                 { $$ = newast($2, $1, $3); }
   | ELEM                          { $$ = newelem($1); }
   | exp LOGICOP exp               { $$ = newast($2, $1, $3); }
-  | NOT exp                       { $$ = newast($1, $2, NULL); }
-  | exp '[' exp ']'               { $$ = newast('P', $1, $3); } /* La primera posicion es 0 */
+  | NOT exp %prec NOT             { $$ = newast($1, $2, NULL); }
+  | exp '[' exp ']'               { $$ = newast(POSITIONEDELEM, $1, $3); } /* La primera posicion es 0 */
   | POP exp                       { $$ = newast(POPOP, $2, NULL); }
-  | exp '#' exp                   { $$ = newast('#', $1, $3); }
+  | exp '#' exp                   { $$ = newast(ISCOINTAINED, $1, $3); }
 ;
 
 explist

@@ -44,9 +44,9 @@ struct symbol *lookup(char *sym)
   abort(); /* tried them all, table is full */
 }
 
-struct ast *newast(int nodetype, struct ast *l, struct ast *r)
+ast newast(int nodetype, ast l, ast r)
 {
-  struct ast *a = malloc(sizeof(struct ast));
+  ast a = malloc(sizeof(struct tAST));
 
   if (!a)
   {
@@ -59,23 +59,23 @@ struct ast *newast(int nodetype, struct ast *l, struct ast *r)
   return a;
 }
 
-struct ast *newnum(double d)
+ast newnum(double d)
 {
-  struct ast *a = malloc(sizeof(struct ast));
+  ast a = malloc(sizeof(struct tAST));
 
   if (!a)
   {
     yyerror("out of space");
     exit(0);
   }
-  a->nodetype = 'K';
+  a->nodetype = CONSTANTAST;
   a->number = d;
-  return (struct ast *)a;
+  return a;
 }
 
-struct ast *newcmp(int cmptype, struct ast *l, struct ast *r)
+ast newcmp(int cmptype, ast l, ast r)
 {
-  struct ast *a = malloc(sizeof(struct ast));
+  ast a = malloc(sizeof(struct tAST));
 
   if (!a)
   {
@@ -88,67 +88,67 @@ struct ast *newcmp(int cmptype, struct ast *l, struct ast *r)
   return a;
 }
 
-struct ast *newfunc(int functype, struct ast *l)
+ast newfunc(int functype, ast l)
 {
-  struct ast *a = malloc(sizeof(struct ast));
+  ast a = malloc(sizeof(struct tAST));
 
   if (!a)
   {
     yyerror("out of space");
     exit(0);
   }
-  a->nodetype = 'F';
+  a->nodetype = FNCALLAST;
   a->l = l;
   a->functype = functype;
   return a;
 }
 
-struct ast *newcall(struct symbol *s, struct ast *l)
+ast newcall(struct symbol *s, ast l)
 {
-  struct ast *a = malloc(sizeof(struct ast));
+  ast a = malloc(sizeof(struct tAST));
 
   if (!a)
   {
     yyerror("out of space");
     exit(0);
   }
-  a->nodetype = 'C';
+  a->nodetype = UFNCALLAST;
   a->l = l;
   a->sym = s; // sym por ser ufncall
   return a;
 }
 
-struct ast *newref(struct symbol *s)
+ast newref(struct symbol *s)
 {
-  struct ast *a = malloc(sizeof(struct ast));
+  ast a = malloc(sizeof(struct tAST));
 
   if (!a)
   {
     yyerror("out of space");
     exit(0);
   }
-  a->nodetype = 'N';
+  a->nodetype = SYMREFAST;
   a->s = s;
-  return (struct ast *)a;
+  return a;
 }
 
-struct ast *newasgn(struct symbol *s, struct ast *v)
+ast newasgn(struct symbol *s, ast v)
 {
-  struct ast *a = malloc(sizeof(struct ast));
+  ast a = malloc(sizeof(struct tAST));
   if (!a)
   {
     yyerror("out of space");
     exit(0);
   }
-  a->nodetype = '=';
+  a->nodetype = ASSIGNMENTAST;
   a->s = s;
   a->v = v;
   return a;
 }
 
-struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *el)
+ast newflow(int nodetype, ast cond, ast tl, ast el)
 {
-  struct ast *a = malloc(sizeof(struct ast));
+  ast a = malloc(sizeof(struct tAST));
 
   if (!a)
   {
@@ -163,7 +163,7 @@ struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *
 }
 
 /* free a tree of ASTs */
-void treefree(struct ast *a)
+void treefree(ast a)
 {
   if (!a) // Agregado para que no de error al ingresar NULL
   {       // al liberar conjunto o lista vacia
@@ -184,8 +184,8 @@ void treefree(struct ast *a)
   case GREATEROREQUALOP:
   case LESSEROREQUALOP:
   case 'L':
-  case 'P':
-  case '#':
+  case POSITIONEDELEM:
+  case ISCOINTAINED:
   case ANDOP:
   case OROP:
   case UNIONOP:
@@ -193,25 +193,25 @@ void treefree(struct ast *a)
   case INTERSOP:
     treefree(a->r);
   /* one subtree */
-  case '%':
-  case 'M':
-  case 'C':
-  case 'F':
+  case ABSVALUEAST:
+  case UMINUSOP:
+  case UFNCALLAST:
+  case FNCALLAST:
   case NOTOP:
   case SETAST:
   case LISTAST:
   case POPOP:
     treefree(a->l);
   /* no subtree */
-  case 'K':
-  case 'N':
+  case CONSTANTAST:
+  case SYMREFAST:
     break;
-  case '=':
+  case ASSIGNMENTAST:
     free(a->v);
     break;
     /* up to three subtrees */
-  case 'I':
-  case 'W':
+  case IFAST:
+  case WHILEAST:
     free(a->cond);
     if (a->tl)
       treefree(a->tl);
@@ -254,12 +254,12 @@ void symlistfree(struct symlist *sl)
   }
 }
 
-static tData callbuiltin(struct ast *);
-static tData calluser(struct ast *);
+static tData callbuiltin(ast);
+static tData calluser(ast);
 
-tData eval(struct ast *a)
+tData eval(ast a)
 {
-  struct ast *auxAST; // variable auxiliar para recorrer un subarbol
+  ast auxAST; // variable auxiliar para recorrer un subarbol
   tData v = NULL;
   tData l, r, auxDT; // Auxiliares para liberar memoria
   if (!a)
@@ -270,15 +270,15 @@ tData eval(struct ast *a)
   switch (a->nodetype)
   {
   /* constant */
-  case 'K':
+  case CONSTANTAST:
     v = CreateDoubleDT(a->number);
     break;
   /* name reference */
-  case 'N':
+  case SYMREFAST:
     v = CopyDT(a->s->value);
     break;
   /* assignment */
-  case '=':
+  case ASSIGNMENTAST:
     l = eval(a->v);
 
     a->s->value = CopyDT(l);
@@ -399,8 +399,8 @@ tData eval(struct ast *a)
     FreeDT(&r);
 
     break;
-
-  case '#':
+  // TODO: Agregar el pertenece.
+  case ISCOINTAINED:
     l = eval(a->l);
     r = eval(a->r);
 
@@ -452,7 +452,7 @@ tData eval(struct ast *a)
   /*POP*/
   case POPOP:
 
-    if (a->l->nodetype == 'N')
+    if (a->l->nodetype == SYMREFAST)
       l = a->l->s->value;
     else
       l = eval(a->l);
@@ -460,7 +460,7 @@ tData eval(struct ast *a)
     if (TypeDT(l) != LIST)
     {
       printf("Invalid POP: the expression is not a list.\n");
-      if (a->l->nodetype != 'N')
+      if (a->l->nodetype != SYMREFAST)
         FreeDT(&l);
       break;
     }
@@ -468,19 +468,19 @@ tData eval(struct ast *a)
     if (SizeL(l) == 0)
     {
       printf("Invalid POP: empty list.\n");
-      if (a->l->nodetype != 'N')
+      if (a->l->nodetype != SYMREFAST)
         FreeDT(&l);
       break;
     }
 
     v = Pop(&l);
 
-    if (a->l->nodetype != 'N')
+    if (a->l->nodetype != SYMREFAST)
       FreeDT(&l);
 
     break;
   /* Positioned Element */
-  case 'P':
+  case POSITIONEDELEM:
 
     l = eval(a->l);
     r = eval(a->r);
@@ -550,8 +550,7 @@ tData eval(struct ast *a)
         break;
       }
     }
-
-    v = ElemDT(l, ((int)ValueDT(r)) + 1);
+    v = CopyDT(ElemDT(l, ((int)ValueDT(r)) + 1));
 
     FreeDT(&l);
     FreeDT(&r);
@@ -584,7 +583,7 @@ tData eval(struct ast *a)
 
     if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
     {
-      printf("Substraction error: at least one of the operands is not a number.\n");
+      printf("Subtraction error: at least one of the operands is not a number.\n");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -635,7 +634,7 @@ tData eval(struct ast *a)
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case '%':
+  case ABSVALUEAST:
     l = eval(a->l);
 
     if (TypeDT(l) != DOUBLE)
@@ -651,7 +650,7 @@ tData eval(struct ast *a)
 
     FreeDT(&l);
     break;
-  case 'M':
+  case UMINUSOP:
     l = eval(a->l);
 
     if (TypeDT(l) != DOUBLE)
@@ -830,7 +829,7 @@ tData eval(struct ast *a)
     /* control flow */
     /* null expressions allowed in the grammar, so check for them */
     /* if/then/else */
-  case 'I':
+  case IFAST:
     if (ValueDT(eval(a->cond)) != 0)
     {
       if (a->tl)
@@ -855,7 +854,7 @@ tData eval(struct ast *a)
     }
     break;
     /* while/do */
-  case 'W':
+  case WHILEAST:
     v = CreateDoubleDT(0.0); /* a default value */
 
     if (a->tl)
@@ -874,12 +873,12 @@ tData eval(struct ast *a)
     eval(a->l);
     v = eval(a->r);
     break;
-  case 'F':
+  case FNCALLAST:
     l = callbuiltin(a);
     v = CopyDT(l);
     FreeDT(&l);
     break;
-  case 'C':
+  case UFNCALLAST:
     l = calluser(a);
     v = CopyDT(l);
     FreeDT(&l);
@@ -891,7 +890,7 @@ tData eval(struct ast *a)
   return v ? v : CreateDoubleDT(0.0);
 }
 
-static tData callbuiltin(struct ast *f)
+static tData callbuiltin(ast f)
 {
   // TODO: verificar tipo de dato de v
 
@@ -915,7 +914,7 @@ static tData callbuiltin(struct ast *f)
 }
 
 /* define a function */
-void dodef(struct symbol *name, struct symlist *syms, struct ast *func)
+void dodef(struct symbol *name, struct symlist *syms, ast func)
 {
   if (name->syms)
     symlistfree(name->syms);
@@ -925,12 +924,12 @@ void dodef(struct symbol *name, struct symlist *syms, struct ast *func)
   name->func = func;
 }
 
-static tData calluser(struct ast *f)
+static tData calluser(ast f)
 {
   // sym por ser ufncall
   struct symbol *fn = f->sym; /* function name */
   struct symlist *sl;         /* dummy arguments */
-  struct ast *args = f->l;    /* actual arguments */
+  ast args = f->l;            /* actual arguments */
   double *oldval, *newval;    /* saved arg values */
   double v;
   int nargs;
@@ -1000,9 +999,9 @@ static tData calluser(struct ast *f)
 }
 
 /*AGREGADO NEWELEM*/
-struct ast *newelem(char *c)
+ast newelem(char *c)
 {
-  struct ast *a = malloc(sizeof(struct ast));
+  ast a = malloc(sizeof(struct tAST));
 
   if (!a)
   {
@@ -1011,5 +1010,5 @@ struct ast *newelem(char *c)
   }
   a->nodetype = ELEMAST;
   a->c = strdup(c);
-  return (struct ast *)a;
+  return a;
 }

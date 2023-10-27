@@ -16,8 +16,10 @@
 #define UNIONOP 600
 #define INTERSOP 601
 #define DIFFOP 602
+#define ISCOINTAINED 603
 
 #define POPOP 700
+#define POSITIONEDELEM 701
 
 #define GREATEROP 801
 #define LESSEROP 802
@@ -25,16 +27,28 @@
 #define ISEQUALOP 804
 #define GREATEROREQUALOP 805
 #define LESSEROREQUALOP 806
+#define UMINUSOP 807
+#define CONSTANTAST 808
+#define SYMREFAST 809
+#define IFAST 810
+#define WHILEAST 811
+#define ASSIGNMENTAST 812
+#define UFNCALLAST 813
+#define FNCALLAST 814
+#define ABSVALUEAST 815
 
 /* interface to the lexer */
 extern int yylineno; /* from lexer */
 void yyerror(char *s, ...);
+
+typedef struct tAST *ast;
+
 /* symbol table */
 struct symbol
 { /* a variable name */
   char *name;
   tData value;
-  struct ast *func;     /* stmt for the function */
+  ast func;             /* stmt for the function */
   struct symlist *syms; /* list of dummy args */
 };
 /* simple symtab of fixed size */
@@ -74,103 +88,55 @@ enum bifs
 /* nodes in the abstract syntax tree */
 /* all have common initial nodetype */
 
-struct ast
+struct tAST
 {
   int nodetype;
   union
   {
     struct // para el ast, fncall y ufncall
     {
-      struct ast *l;
+      struct tAST *l;
       union
       {
-        struct ast *r;      // ast
+        struct tAST *r;     // ast
         enum bifs functype; // fncall
         struct symbol *sym; // ufncall
+        // TODO: arreglar nombre s para symbol*
       };
     };
     struct // para el flow
     {
-      struct ast *cond; // condition
-      struct ast *tl;   // then branch or do list
-      struct ast *el;   // optional else branch
+      struct tAST *cond; // condition
+      struct tAST *tl;   // then branch or do list
+      struct tAST *el;   // optional else branch
     };
     double number; // para el numval
     struct         // para el symref y symasgn
     {
       struct symbol *s;
-      struct ast *v; /* value */
+      struct tAST *v; // solo para el symasgn
     };
     char *c; // para el elemast
   };
 };
 
-// struct ast
-// {
-//   int nodetype;
-//   struct ast *l;
-//   struct ast *r;
-// };
-// struct fncall
-// {               /* built-in function */
-//   int nodetype; /* type F */
-//   struct ast *l;
-//   enum bifs functype;
-// };
-// struct ufncall
-// {                /* user function */
-//   int nodetype;  /* type C */
-//   struct ast *l; /* list of arguments */
-//   struct symbol *s;
-// };
-// struct flow
-// {
-//   int nodetype;     /* type I or W */
-//   struct ast *cond; /* condition */
-//   struct ast *tl;   /* then branch or do list */
-//   struct ast *el;   /* optional else branch */
-// };
-// struct numval
-// {
-//   int nodetype; /* type K */
-//   double number;
-// };
-// struct symref
-// {
-//   int nodetype; /* type N */
-//   struct symbol *s;
-// };
-// struct symasgn
-// {
-//   int nodetype; /* type = */
-//   struct symbol *s;
-//   struct ast *v; /* value */
-// };
-
-// struct elemast
-// {
-//   int nodetype; /*type = ELEMAST*/
-//   char *c;
-// };
-
 /* build an AST */
-struct ast *newast(int nodetype, struct ast *l, struct ast *r);
-struct ast *newcmp(int cmptype, struct ast *l, struct ast *r);
-struct ast *newfunc(int functype, struct ast *l);
-struct ast *newcall(struct symbol *s, struct ast *l);
-struct ast *newref(struct symbol *s);
-struct ast *newasgn(struct symbol *s, struct ast *v);
-struct ast *newnum(double d);
-struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *tr);
-
-struct ast *newelem(char *c);
+ast newast(int nodetype, ast l, ast r);
+ast newcmp(int cmptype, ast l, ast r);
+ast newfunc(int functype, ast l);
+ast newcall(struct symbol *s, ast l);
+ast newref(struct symbol *s);
+ast newasgn(struct symbol *s, ast v);
+ast newnum(double d);
+ast newflow(int nodetype, ast cond, ast tl, ast tr);
+ast newelem(char *c);
 
 /* define a function */
-void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts);
+void dodef(struct symbol *name, struct symlist *syms, ast stmts);
 /* evaluate an AST */
-tData eval(struct ast *);
+tData eval(ast);
 /* delete and free an AST */
-void treefree(struct ast *);
+void treefree(ast);
 /* interface to the lexer */
 extern int yylineno; /* from lexer */
 void yyerror(char *s, ...);

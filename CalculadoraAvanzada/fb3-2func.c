@@ -869,9 +869,12 @@ tData eval(ast a)
     break; /* value of last statement is value of while/do */
 
   /* list of statements */
-  case 'L':
-    eval(a->l);
+  case 'L': // TODO: preguntar por el primer eval()
+    l = eval(a->l);
+
     v = eval(a->r);
+
+    FreeDT(&l);
     break;
   case FNCALLAST:
     l = callbuiltin(a);

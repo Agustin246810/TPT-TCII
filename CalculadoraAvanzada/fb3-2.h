@@ -41,7 +41,7 @@
 extern int yylineno; /* from lexer */
 void yyerror(char *s, ...);
 
-typedef struct tAST *ast;
+typedef struct tAst *ast;
 
 /* symbol table */
 struct symbol
@@ -83,22 +83,23 @@ enum bifs
   B_sqrt = 1,
   B_exp,
   B_log,
-  B_print
+  B_print,
+  B_abs
 };
 /* nodes in the abstract syntax tree */
 /* all have common initial nodetype */
 
-struct tAST
+struct tAst
 {
   int nodetype;
   union
   {
     struct // para el ast, fncall y ufncall
     {
-      struct tAST *l;
+      struct tAst *l;
       union
       {
-        struct tAST *r;     // ast
+        struct tAst *r;     // ast
         enum bifs functype; // fncall
         struct symbol *sym; // ufncall
         // TODO: arreglar nombre s para symbol*
@@ -106,15 +107,15 @@ struct tAST
     };
     struct // para el flow
     {
-      struct tAST *cond; // condition
-      struct tAST *tl;   // then branch or do list
-      struct tAST *el;   // optional else branch
+      struct tAst *cond; // condition
+      struct tAst *tl;   // then branch or do list
+      struct tAst *el;   // optional else branch
     };
     double number; // para el numval
     struct         // para el symref y symasgn
     {
       struct symbol *s;
-      struct tAST *v; // solo para el symasgn
+      struct tAst *v; // solo para el symasgn
     };
     char *c; // para el elemast
   };

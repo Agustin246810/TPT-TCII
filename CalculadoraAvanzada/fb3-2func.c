@@ -46,7 +46,7 @@ struct symbol *lookup(char *sym)
 
 ast newast(int nodetype, ast l, ast r)
 {
-  ast a = malloc(sizeof(struct tAST));
+  ast a = malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -61,7 +61,7 @@ ast newast(int nodetype, ast l, ast r)
 
 ast newnum(double d)
 {
-  ast a = malloc(sizeof(struct tAST));
+  ast a = malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -75,7 +75,7 @@ ast newnum(double d)
 
 ast newcmp(int cmptype, ast l, ast r)
 {
-  ast a = malloc(sizeof(struct tAST));
+  ast a = malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -90,7 +90,7 @@ ast newcmp(int cmptype, ast l, ast r)
 
 ast newfunc(int functype, ast l)
 {
-  ast a = malloc(sizeof(struct tAST));
+  ast a = malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -105,7 +105,7 @@ ast newfunc(int functype, ast l)
 
 ast newcall(struct symbol *s, ast l)
 {
-  ast a = malloc(sizeof(struct tAST));
+  ast a = malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -120,7 +120,7 @@ ast newcall(struct symbol *s, ast l)
 
 ast newref(struct symbol *s)
 {
-  ast a = malloc(sizeof(struct tAST));
+  ast a = malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -134,7 +134,7 @@ ast newref(struct symbol *s)
 
 ast newasgn(struct symbol *s, ast v)
 {
-  ast a = malloc(sizeof(struct tAST));
+  ast a = malloc(sizeof(struct tAst));
   if (!a)
   {
     yyerror("out of space");
@@ -148,7 +148,7 @@ ast newasgn(struct symbol *s, ast v)
 
 ast newflow(int nodetype, ast cond, ast tl, ast el)
 {
-  ast a = malloc(sizeof(struct tAST));
+  ast a = malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -869,7 +869,7 @@ tData eval(ast a)
     break; /* value of last statement is value of while/do */
 
   /* list of statements */
-  case 'L': // TODO: preguntar por el primer eval()
+  case 'L':
     l = eval(a->l);
 
     v = eval(a->r);
@@ -1004,7 +1004,7 @@ static tData calluser(ast f)
 /*AGREGADO NEWELEM*/
 ast newelem(char *c)
 {
-  ast a = malloc(sizeof(struct tAST));
+  ast a = malloc(sizeof(struct tAst));
 
   if (!a)
   {

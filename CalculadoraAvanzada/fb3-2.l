@@ -19,10 +19,10 @@ EXP ([Ee][-+]?[0-9]+)
 "*" |
 "/" |
 "=" |
-"%" | // cambio de "|" a "%" para el valor absoluto
+"%" | // cambio de "|" a "%" para el valor absoluto TODO: sacar
 "," |
 ";" |
-"#" | // estaContenidoEn
+"#" | // estaContenidoEn TODO: cambiar a ":"
 "(" |
 ")" { return yytext[0]; }
 
@@ -63,6 +63,7 @@ EXP ([Ee][-+]?[0-9]+)
 "exp"                   { yylval.fn = B_exp;    return FUNC; }
 "log"                   { yylval.fn = B_log;    return FUNC; }
 "print"                 { yylval.fn = B_print;  return FUNC; }
+"abs"                   { yylval.fn = B_abs;    return FUNC; } /* TODO: implementar */
 
 
  /* names */

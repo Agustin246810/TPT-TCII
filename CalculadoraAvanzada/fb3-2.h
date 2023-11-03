@@ -35,7 +35,7 @@
 #define ASSIGNMENTAST 812
 #define UFNCALLAST 813
 #define FNCALLAST 814
-#define ABSVALUEAST 815
+// #define ABSVALUEAST 815
 
 /* interface to the lexer */
 extern int yylineno; /* from lexer */

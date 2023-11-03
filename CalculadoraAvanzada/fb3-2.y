@@ -27,12 +27,12 @@ int yylex(void);
 %left <fn> LOGICOP
 %left <fn> SETOP
 %left '['
-%left '#'
+%left ':'
 %left <fn> CMP
 %left POP
 %left '+' '-'
 %left '*' '/'
-%nonassoc '%' UMINUS
+%nonassoc UMINUS
 %nonassoc <fn> NOT
 %token <c> ELEM
 %token <s> NAME
@@ -69,7 +69,7 @@ exp
   | exp '-' exp                   { $$ = newast('-', $1,$3); }
   | exp '*' exp                   { $$ = newast('*', $1,$3); }
   | exp '/' exp                   { $$ = newast('/', $1,$3); }
-  | '%' exp                       { $$ = newast(ABSVALUEAST, $2, NULL); }
+  /* | '%' exp                       { $$ = newast(ABSVALUEAST, $2, NULL); } */
   | '(' exp ')'                   { $$ = $2; }
   | '-' exp %prec UMINUS          { $$ = newast(UMINUSOP, $2, NULL); }
   | NUMBER                        { $$ = newnum($1); }
@@ -87,7 +87,7 @@ exp
   | NOT exp %prec NOT             { $$ = newast($1, $2, NULL); }
   | exp '[' exp ']'               { $$ = newast(POSITIONEDELEM, $1, $3); } /* La primera posicion es 0 */
   | POP exp                       { $$ = newast(POPOP, $2, NULL); }
-  | exp '#' exp                   { $$ = newast(ISCOINTAINED, $1, $3); }
+  | exp ':' exp                   { $$ = newast(ISCOINTAINED, $1, $3); }
 ;
 
 explist

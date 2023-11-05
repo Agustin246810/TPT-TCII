@@ -193,7 +193,7 @@ void treefree(ast a)
   case INTERSOP:
     treefree(a->r);
   /* one subtree */
-  case ABSVALUEAST:
+  // case ABSVALUEAST:
   case UMINUSOP:
   case UFNCALLAST:
   case FNCALLAST:
@@ -634,22 +634,22 @@ tData eval(ast a)
     FreeDT(&l);
     FreeDT(&r);
     break;
-  case ABSVALUEAST:
-    l = eval(a->l);
+  // case ABSVALUEAST:
+  //   l = eval(a->l);
 
-    if (TypeDT(l) != DOUBLE)
-    {
-      printf("Abstolute Value error: the operand is not a number.\n");
+  //   if (TypeDT(l) != DOUBLE)
+  //   {
+  //     printf("Abstolute Value error: the operand is not a number.\n");
 
-      FreeDT(&l);
+  //     FreeDT(&l);
 
-      break;
-    }
+  //     break;
+  //   }
 
-    v = CreateDoubleDT(fabs(ValueDT(l)));
+  //   v = CreateDoubleDT(fabs(ValueDT(l)));
 
-    FreeDT(&l);
-    break;
+  //   FreeDT(&l);
+  //   break;
   case UMINUSOP:
     l = eval(a->l);
 
@@ -895,10 +895,22 @@ tData eval(ast a)
 
 static tData callbuiltin(ast f)
 {
-  // TODO: verificar tipo de dato de v
-
   enum bifs functype = f->functype;
-  double v = ValueDT(eval(f->l));
+
+  tData aux = eval(f->l);
+
+  if (TypeDT(aux) != DOUBLE) // Verificación del tipo de dato del parametro,
+  {                          // de momento solo admite DOUBLE
+    yyerror("Wrong type of parameter: %d", TypeDT(aux));
+
+    FreeDT(&aux);
+
+    return CreateDoubleDT(0.0);
+  }
+
+  double v = ValueDT(aux);
+  FreeDT(&aux);
+
   switch (functype)
   {
   case B_sqrt:
@@ -910,6 +922,8 @@ static tData callbuiltin(ast f)
   case B_print:
     printf("= %4.4g\n", v);
     return CreateDoubleDT(v);
+  case B_abs:
+    return CreateDoubleDT(fabs(v));
   default:
     yyerror("Unknown built-in function %d", functype);
     return CreateDoubleDT(0.0);

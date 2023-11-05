@@ -19,10 +19,10 @@ EXP ([Ee][-+]?[0-9]+)
 "*" |
 "/" |
 "=" |
-"%" | // cambio de "|" a "%" para el valor absoluto TODO: sacar
+ /* "%" | // cambio de "|" a "%" para el valor absoluto */
 "," |
 ";" |
-"#" | // estaContenidoEn TODO: cambiar a ":"
+":" | // estaContenidoEn TODO: cambiar a ":"
 "(" |
 ")" { return yytext[0]; }
 
@@ -43,7 +43,7 @@ EXP ([Ee][-+]?[0-9]+)
 "!"                     { yylval.fn = NOTOP;              return NOT; }
 
  /* literal element */
-"'"[a-zA-Z0-9]+         { yylval.c = yytext; return ELEM;} //La cadena se guarda junto con el '
+"'"[a-zA-Z0-9]+         { yylval.c = yytext; return ELEM;} // La cadena se guarda junto con el '
 
  /* keywords */
 "if"                    { return IF; }
@@ -63,8 +63,7 @@ EXP ([Ee][-+]?[0-9]+)
 "exp"                   { yylval.fn = B_exp;    return FUNC; }
 "log"                   { yylval.fn = B_log;    return FUNC; }
 "print"                 { yylval.fn = B_print;  return FUNC; }
-"abs"                   { yylval.fn = B_abs;    return FUNC; } /* TODO: implementar */
-
+"abs"                   { yylval.fn = B_abs;    return FUNC; }
 
  /* names */
 [a-zA-Z][a-zA-Z0-9]*    { yylval.s = lookup(yytext); return NAME; }

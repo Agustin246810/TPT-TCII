@@ -74,6 +74,9 @@ void Push(tData L, tData elem);
 tData Pop(tData *L);
 // Retorna el tamanio de la lista
 int SizeL(tData L);
+// Intercambia un elemento en una lista en una determinada posicion,
+// liberando el anterior y reemplazandolo por una copia del dado
+void ExchangeL(tData L, tData elem, int pos);
 
 /*Operaciones con SET*/
 // Todas las operciones retornan -1 o NULL cuando no corresponde el tipo

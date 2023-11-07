@@ -88,7 +88,9 @@ exp
   | exp '[' exp ']'               { $$ = newast(POSITIONEDELEM, $1, $3); } /* La primera posicion es 0 */
   | POP exp                       { $$ = newast(POPOP, $2, NULL); }
   | exp ':' exp                   { $$ = newast(ISCOINTAINED, $1, $3); }
+  | NAME '[' exp ']' '=' exp      { $$ = newexchange($1, $3, $6); }
 ;
+
 
 explist
   : exp

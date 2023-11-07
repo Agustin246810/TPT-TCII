@@ -287,6 +287,48 @@ tData eval(ast a)
     FreeDT(&l);
     break;
 
+  /*Assigment Exchange*/
+  case EXCHANGEOP:
+    l = eval(a->l);
+    r = eval(a->r);
+    auxDT = eval(a->exchsym);
+
+    if (l->nodeType != DOUBLE)
+    {
+      printf("Error: position is not an integer.");
+
+      FreeDT(&l);
+      FreeDT(&r);
+      FreeDT(&auxDT);
+      break;
+    }
+
+    if (l->value < 0)
+    {
+      printf("Error: negative position.");
+
+      FreeDT(&l);
+      FreeDT(&r);
+      FreeDT(&auxDT);
+      break;
+    }
+
+    if (l->value > SizeL(auxDT))
+    {
+      printf("Error: position overflow.");
+
+      FreeDT(&l);
+      FreeDT(&r);
+      FreeDT(&auxDT);
+      break;
+    }
+    a->exchsym->value = exchangeL(auxDT, r, l);
+    freeDT(&l);
+    freeDT(&r);
+    freeDT(&auxDT);
+
+    break;
+
   /* Elem */
   case ELEMAST:
     v = CreateDT(a->c);
@@ -1027,5 +1069,22 @@ ast newelem(char *c)
   }
   a->nodetype = ELEMAST;
   a->c = strdup(c);
+  return a;
+}
+
+ast newexchange(struct symbol *s, ast l, ast r)
+{
+  ast a = malloc(sizeof(struct tAst));
+
+  if (!a)
+  {
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = EXCHANGEOP;
+  a->l = l;
+  a->r = r;
+  a->exchsym = s;
   return a;
 }

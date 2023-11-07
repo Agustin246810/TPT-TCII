@@ -20,6 +20,7 @@
 
 #define POPOP 700
 #define POSITIONEDELEM 701
+#define EXCHANGEOP 702
 
 #define GREATEROP 801
 #define LESSEROP 802
@@ -99,25 +100,31 @@ struct tAst
       struct tAst *l;
       union
       {
-        struct tAst *r;     // ast
+        struct
+        {
+          struct tAst *r;         // ast y exchangeL
+          struct symbol *exchsym; // solo para exchangeL
+        };
         enum bifs functype; // fncall
         struct symbol *sym; // ufncall
-        // TODO: arreglar nombre s para symbol*
       };
     };
+
     struct // para el flow
     {
       struct tAst *cond; // condition
       struct tAst *tl;   // then branch or do list
       struct tAst *el;   // optional else branch
     };
-    double number; // para el numval
-    struct         // para el symref y symasgn
+
+    struct // para el symref y symasgn
     {
       struct symbol *s;
       struct tAst *v; // solo para el symasgn
     };
-    char *c; // para el elemast
+
+    double number; // para el numval
+    char *c;       // para el elemast
   };
 };
 
@@ -131,6 +138,7 @@ ast newasgn(struct symbol *s, ast v);
 ast newnum(double d);
 ast newflow(int nodetype, ast cond, ast tl, ast tr);
 ast newelem(char *c);
+ast newexchange(struct symbol *s, ast l, ast r);
 
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, ast stmts);

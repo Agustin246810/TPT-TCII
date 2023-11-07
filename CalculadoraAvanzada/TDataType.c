@@ -408,6 +408,33 @@ int SizeL(tData L)
   return count;
 }
 
+void ExchangeL(tData L, tData elem, int pos)
+{
+  if (L == NULL)
+  {
+    return;
+  }
+
+  if (L->data == NULL)
+  {
+    return;
+  }
+
+  if (SizeL(L) < pos)
+  {
+    return;
+  }
+
+  if (pos < 1)
+  {
+    return;
+  }
+
+  tData aux = L; // Para recorrer la lista
+
+  // TODO: terminar de implementar
+}
+
 int Cardinal(tData S)
 {
 

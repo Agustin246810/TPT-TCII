@@ -303,7 +303,9 @@ tData eval(ast a)
       break;
     }
 
-    if (l->value < 0)
+    // TODO: verificar que sea entero
+
+    if (ValueDT(l) < 0)
     {
       printf("Error: negative position.");
 
@@ -322,10 +324,12 @@ tData eval(ast a)
       FreeDT(&auxDT);
       break;
     }
-    a->exchsym->value = exchangeL(auxDT, r, l);
+    exchangeL(auxDT, r, (int)ValueDT(l));
     freeDT(&l);
     freeDT(&r);
     freeDT(&auxDT);
+
+    v = ElemDT(auxDT, (int)ValueDT(l));
 
     break;
 

@@ -1,28 +1,15 @@
 @echo off
 
-flex ImprimeTyL.l
+bison -d fb3-2.y
+echo "Bison compilado"
+flex fb3-2.l
 echo "Flex compilado"
-pause
-gcc .\lex.yy.c -o Compilado.exe
+gcc fb3-2.tab.c lex.yy.c fb3-2func.c TDataType.c TString.c
 echo "gcc compilado"
-pause
-Compilado.exe
+a.exe
 echo "Se ejecuto correctamente"
+del a.exe
+del fb3-2.tab.c
+del fb3-2.tab.h
 del lex.yy.c
-del Compilado.exe
 echo "Se eliminaron los archivos generados"
-pause
-
-@REM bison -dy Analizador.y
-@REM echo "Bison compilado"
-@REM flex Analizador.l
-@REM echo "Flex compilado"
-@REM gcc lex.yy.c y.tab.c
-@REM echo "gcc compilado"
-@REM a.exe
-@REM echo "Se ejecuto correctamente"
-@REM del a.exe
-@REM del lex.yy.c
-@REM del y.tab.c
-@REM del y.tab.h
-@REM echo "Se eliminaron los archivos generados"

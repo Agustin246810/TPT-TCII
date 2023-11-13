@@ -1,7 +1,0 @@
-<expresion> -> <expresion> | <expresion>
-
-<expresion>.actual_type -> 
-
-
-<expresion> -> '{''}'
-<expresion> -> '{' <expresion_list>'}'

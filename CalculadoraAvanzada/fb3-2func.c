@@ -191,6 +191,7 @@ void treefree(ast a)
   case UNIONOP:
   case DIFFOP:
   case INTERSOP:
+  case EXCHANGEOP:
     treefree(a->r);
   /* one subtree */
   // case ABSVALUEAST:
@@ -278,7 +279,7 @@ tData eval(ast a)
     v = CopyDT(a->s->value);
     break;
   /* assignment */
-  case ASSIGNMENTAST:
+  case ASSIGNMENTAST: // TODO: liberar el anterior
     l = eval(a->v);
 
     a->s->value = CopyDT(l);
@@ -291,9 +292,19 @@ tData eval(ast a)
   case EXCHANGEOP:
     l = eval(a->l);
     r = eval(a->r);
-    auxDT = eval(a->exchsym);
+    auxDT = a->exchsym->value;
 
-    if (l->nodeType != DOUBLE)
+    if (TypeDT(l) != DOUBLE)
+    {
+      printf("Error: position is not a number.");
+
+      FreeDT(&l);
+      FreeDT(&r);
+      FreeDT(&auxDT);
+      break;
+    }
+
+    if (ValueDT(l) != floor(ValueDT(l)))
     {
       printf("Error: position is not an integer.");
 
@@ -302,8 +313,6 @@ tData eval(ast a)
       FreeDT(&auxDT);
       break;
     }
-
-    // TODO: verificar que sea entero
 
     if (ValueDT(l) < 0)
     {
@@ -315,7 +324,7 @@ tData eval(ast a)
       break;
     }
 
-    if (l->value > SizeL(auxDT))
+    if (l->value >= SizeL(auxDT))
     {
       printf("Error: position overflow.");
 
@@ -324,12 +333,14 @@ tData eval(ast a)
       FreeDT(&auxDT);
       break;
     }
-    exchangeL(auxDT, r, (int)ValueDT(l));
-    freeDT(&l);
-    freeDT(&r);
-    freeDT(&auxDT);
 
-    v = ElemDT(auxDT, (int)ValueDT(l));
+    ExchangeL(auxDT, r, (int)ValueDT(l) + 1);
+
+    FreeDT(&l);
+    FreeDT(&r);
+    FreeDT(&auxDT);
+
+    v = CopyDT(ElemDT(auxDT, (int)ValueDT(l) + 1));
 
     break;
 

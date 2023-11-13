@@ -21,6 +21,10 @@ tData _CreateSingleDTSet();
 // Retorna un puntero a un DataType de tipo LIST con hijos nulos.
 tData _CreateSingleDTList();
 
+// Modulo recursivo para intercambiar un elemento de una lista
+// (Solo se utiliza en ExchangeL())
+void _ExchangeLRec(tData L, tData elem, int pos);
+
 tData CopyDT(tData original)
 {
   tData copy = NULL;
@@ -430,9 +434,27 @@ void ExchangeL(tData L, tData elem, int pos)
     return;
   }
 
-  tData aux = L; // Para recorrer la lista
+  if (elem == NULL)
+  {
+    return;
+  }
 
-  // TODO: terminar de implementar
+  _ExchangeLRec(L, elem, pos);
+}
+
+void _ExchangeLRec(tData L, tData elem, int pos)
+{
+  if (pos == 1)
+  {
+    tData aux = L->data;
+    FreeDT(&aux);
+
+    L->data = CopyDT(elem);
+  }
+  else
+  {
+    _ExchangeLRec(L->next, elem, pos - 1);
+  }
 }
 
 int Cardinal(tData S)

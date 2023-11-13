@@ -46,9 +46,9 @@ int yylex(void);
 %%
 
 stmt
-  : IF '(' exp ')' '{' list '}'                      { $$ = newflow(IFAST, $3, $6, NULL); }
-  | IF '(' exp ')' '{' list '}' ELSE '{' list '}'    { $$ = newflow(IFAST, $3, $6, $10); }
-  | WHILE '(' exp ')' '{' list '}'                     { $$ = newflow(WHILEAST, $3, $6, NULL); }
+  : IF '(' exp ')' '{' list '}'                       { $$ = newflow(IFAST, $3, $6, NULL); }
+  | IF '(' exp ')' '{' list '}' ELSE '{' list '}'     { $$ = newflow(IFAST, $3, $6, $10); }
+  | WHILE '(' exp ')' '{' list '}'                    { $$ = newflow(WHILEAST, $3, $6, NULL); }
   | exp
 ;
 
@@ -87,7 +87,7 @@ exp
   | exp '[' exp ']'               { $$ = newast(POSITIONEDELEM, $1, $3); } /* La primera posicion es 0 */
   | POP exp                       { $$ = newast(POPOP, $2, NULL); }
   | exp ':' exp                   { $$ = newast(ISCOINTAINED, $1, $3); }
-  /* | NAME '[' exp ']' '=' exp      { $$ = newexchange($1, $3, $6); } */
+  | '#' NAME '[' exp ']' '=' exp  { $$ = newexchange($2, $4, $7); }
 ;
 
 explist

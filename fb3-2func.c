@@ -300,7 +300,6 @@ tData eval(ast a)
 
       FreeDT(&l);
       FreeDT(&r);
-      FreeDT(&auxDT);
       break;
     }
 
@@ -310,7 +309,6 @@ tData eval(ast a)
 
       FreeDT(&l);
       FreeDT(&r);
-      FreeDT(&auxDT);
       break;
     }
 
@@ -320,27 +318,24 @@ tData eval(ast a)
 
       FreeDT(&l);
       FreeDT(&r);
-      FreeDT(&auxDT);
       break;
     }
 
-    if (l->value >= SizeL(auxDT))
+    if (ValueDT(l) >= SizeL(auxDT))
     {
       printf("Error: position overflow.");
 
       FreeDT(&l);
       FreeDT(&r);
-      FreeDT(&auxDT);
       break;
     }
 
     ExchangeL(auxDT, r, (int)ValueDT(l) + 1);
 
+    v = CopyDT(ElemDT(auxDT, (int)ValueDT(l) + 1));
+
     FreeDT(&l);
     FreeDT(&r);
-    FreeDT(&auxDT);
-
-    v = CopyDT(ElemDT(auxDT, (int)ValueDT(l) + 1));
 
     break;
 

@@ -439,7 +439,23 @@ void ExchangeL(tData L, tData elem, int pos)
     return;
   }
 
-  _ExchangeLRec(L, elem, pos);
+  // _ExchangeLRec(L, elem, pos);
+
+  tData aux = L;
+  tData aux2;
+
+  while (pos > 1)
+  {
+    aux = aux->next;
+    pos = pos - 1;
+  }
+
+  // aux2 = aux->data;
+  // FreeDT(&aux2);
+
+  // printf("faskmfoasmdoas");
+
+  aux->data = CopyDT(elem);
 }
 
 void _ExchangeLRec(tData L, tData elem, int pos)

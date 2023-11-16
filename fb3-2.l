@@ -23,7 +23,7 @@ EXP ([Ee][-+]?[0-9]+)
  /* "%" | // cambio de "|" a "%" para el valor absoluto */
 "," |
 ";" |
-":" | // estaContenidoEn TODO: cambiar a ":"
+":" | // estaContenidoEn
 "(" |
 ")" { return yytext[0]; }
 
@@ -48,10 +48,8 @@ EXP ([Ee][-+]?[0-9]+)
 
  /* keywords */
 "if"                    { return IF; }
- /* "then"                  { return THEN; } */
 "else"                  { return ELSE; }
 "while"                 { return WHILE; }
- /* "do"                    { return DO; } */
 "let"                   { return LET; }
 "foreach"               { return FOREACH; }
 "pop"                   { return POP; }

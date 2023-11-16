@@ -49,6 +49,7 @@ stmt
   : IF '(' exp ')' '{' list '}'                       { $$ = newflow(IFAST, $3, $6, NULL); }
   | IF '(' exp ')' '{' list '}' ELSE '{' list '}'     { $$ = newflow(IFAST, $3, $6, $10); }
   | WHILE '(' exp ')' '{' list '}'                    { $$ = newflow(WHILEAST, $3, $6, NULL); }
+  | FOREACH NAME IN exp '{' list '}'                  { $$ = newforeach($2, $4, $6); }
   | exp
 ;
 

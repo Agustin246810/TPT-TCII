@@ -162,6 +162,23 @@ ast newflow(int nodetype, ast cond, ast tl, ast el)
   return a;
 }
 
+ast newforeach(struct symbol *sym, ast exp, ast tl)
+{
+  ast a = malloc(sizeof(struct tAst));
+
+  if (!a)
+  {
+    yyerror("out of space");
+    exit(0);
+  }
+  a->nodetype = FOREACHAST;
+  a->symvar = sym;
+  a->l = exp;
+  a->r = tl;
+
+  return a;
+}
+
 /* free a tree of ASTs */
 void treefree(ast a)
 {
@@ -192,6 +209,7 @@ void treefree(ast a)
   case DIFFOP:
   case INTERSOP:
   case EXCHANGEOP:
+  case FOREACHAST:
     treefree(a->r);
   /* one subtree */
   // case ABSVALUEAST:
@@ -292,7 +310,7 @@ tData eval(ast a)
   case EXCHANGEOP:
     l = eval(a->l);
     r = eval(a->r);
-    auxDT = a->exchsym->value;
+    auxDT = a->symvar->value;
 
     if (TypeDT(l) != DOUBLE)
     {
@@ -686,22 +704,7 @@ tData eval(ast a)
     FreeDT(&l);
     FreeDT(&r);
     break;
-  // case ABSVALUEAST:
-  //   l = eval(a->l);
 
-  //   if (TypeDT(l) != DOUBLE)
-  //   {
-  //     printf("Abstolute Value error: the operand is not a number.\n");
-
-  //     FreeDT(&l);
-
-  //     break;
-  //   }
-
-  //   v = CreateDoubleDT(fabs(ValueDT(l)));
-
-  //   FreeDT(&l);
-  //   break;
   case UMINUSOP:
     l = eval(a->l);
 
@@ -881,7 +884,7 @@ tData eval(ast a)
     /* control flow */
     /* null expressions allowed in the grammar, so check for them */
     /* if/then/else */
-  case IFAST:
+  case IFAST: // TODO: comprobar tipos
     if (ValueDT(eval(a->cond)) != 0)
     {
       if (a->tl)
@@ -906,19 +909,88 @@ tData eval(ast a)
     }
     break;
     /* while/do */
-  case WHILEAST:
+  case WHILEAST:             // TODO: comprobar tipos
     v = CreateDoubleDT(0.0); /* a default value */
 
     if (a->tl)
     {
-      while (ValueDT(eval(a->cond)) != 0)
+      r = eval(a->cond);
+
+      while (ValueDT(r) != 0)
       {
+        FreeDT(&v);
+
         l = eval(a->tl);
         v = CopyDT(l);
         FreeDT(&l);
+
+        FreeDT(&r);
+        r = eval(a->cond);
       }
+
+      FreeDT(&r);
     }
     break; /* value of last statement is value of while/do */
+
+  case FOREACHAST:
+    v = CreateDoubleDT(0.0); // valor por defecto
+
+    l = eval(a->l);
+
+    if (TypeDT(l) != SET && TypeDT(l) != LIST)
+    {
+      printf("FOREACH error: argument is not a set or a list.\n");
+
+      FreeDT(&l);
+
+      break;
+    }
+
+    if (a->r)
+    {
+      if (TypeDT(l) == SET)
+      {
+        for (int pos = 1; pos <= Cardinal(l); pos++)
+        {
+          FreeDT(&(a->symvar->value));
+          a->symvar->value = CopyDT(ElemDT(l, pos));
+
+          r = eval(a->r);
+          FreeDT(&r);
+
+          FreeDT(&l);
+          l = eval(a->l);
+
+          if (TypeDT(l) != SET)
+          {
+            break;
+          }
+        }
+      }
+      else
+      {
+        for (int pos = 1; pos <= SizeL(l); pos++)
+        {
+          FreeDT(&(a->symvar->value));
+          a->symvar->value = CopyDT(ElemDT(l, pos));
+
+          r = eval(a->r);
+          FreeDT(&r);
+
+          FreeDT(&l);
+          l = eval(a->l);
+
+          if (TypeDT(l) != LIST)
+          {
+            break;
+          }
+        }
+      }
+    }
+
+    FreeDT(&l);
+
+    break;
 
   /* list of statements */
   case 'L':
@@ -928,6 +1000,7 @@ tData eval(ast a)
 
     FreeDT(&l);
     break;
+
   case FNCALLAST:
     l = callbuiltin(a);
     v = CopyDT(l);
@@ -1095,6 +1168,6 @@ ast newexchange(struct symbol *s, ast l, ast r)
   a->nodetype = EXCHANGEOP;
   a->l = l;
   a->r = r;
-  a->exchsym = s;
+  a->symvar = s;
   return a;
 }

@@ -33,9 +33,10 @@
 #define SYMREFAST 809
 #define IFAST 810
 #define WHILEAST 811
-#define ASSIGNMENTAST 812
-#define UFNCALLAST 813
-#define FNCALLAST 814
+#define FOREACHAST 812
+#define ASSIGNMENTAST 813
+#define UFNCALLAST 814
+#define FNCALLAST 815
 // #define ABSVALUEAST 815
 
 /* interface to the lexer */
@@ -102,8 +103,8 @@ struct tAst
       {
         struct
         {
-          struct tAst *r;         // ast y exchangeL
-          struct symbol *exchsym; // solo para exchangeL
+          struct tAst *r;        // ast y exchangeL
+          struct symbol *symvar; // solo para exchangeL y Foreach
         };
         enum bifs functype; // fncall
         struct symbol *sym; // ufncall
@@ -136,9 +137,10 @@ ast newcall(struct symbol *s, ast l);
 ast newref(struct symbol *s);
 ast newasgn(struct symbol *s, ast v);
 ast newnum(double d);
-ast newflow(int nodetype, ast cond, ast tl, ast tr);
+ast newflow(int nodetype, ast cond, ast tl, ast el);
 ast newelem(char *c);
 ast newexchange(struct symbol *s, ast l, ast r);
+ast newforeach(struct symbol *sym, ast exp, ast tl);
 
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, ast stmts);

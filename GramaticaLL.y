@@ -38,27 +38,38 @@ int yylex(void);
 %%
 
 exp
-  : exp CMP complexop
-  | complexop
+  : complexop exprec
+;
+
+exprec
+  :
+  | CMP complexop exprec
 ;
 
 logicop
-  : logicop LOGICOP exp
-  | NOT exp
-  | exp
+  : NOT exp logicoprec
+  | exp logicoprec
+;
+
+logicoprec
+  :
+  | LOGICOP exp logicoprec
 ;
 
 complexop
-  : literals position
-  | complexop SETOP literals
-  | POP literals
+  : literals position complexoprec
+  | POP literals complexoprec
+;
+
+complexoprec
+  :
+  | SETOP literals complexoprec
 ;
 
 position
   :
   | '[' literals ']'
 ;
-
 
 literals
   : literalset
@@ -76,15 +87,18 @@ literalist
   : '[' explist2 ']'
 ;
 
-/* se usa para las listas de expresiones en listas y conj literales */
 explist2
   :
   | explist
 ;
 
 explist
-  : exp
-  | exp ',' explist
+  : exp explistrec
+;
+
+explistrec
+  :
+  | ',' exp explistrec
 ;
 
 %%

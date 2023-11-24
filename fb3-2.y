@@ -39,7 +39,7 @@ int yylex(void);
 %token <d> NUMBER
 %token <fn> FUNC
 %type <a> exp stmt list explist
-%type <sl> symlist
+%type <sl> symlist symlistAM
 
 %start calclist
 
@@ -54,7 +54,7 @@ stmt
 ;
 
 list
-  : /* nothing */                 { $$ = NULL; }
+  : /* nothing */                                     { $$ = NULL; }
   | stmt ';' list
   {
     if ($3 == NULL)
@@ -65,40 +65,49 @@ list
 ;
 
 exp
-  : exp CMP exp                   { $$ = newcmp($2, $1, $3); }
-  | exp '+' exp                   { $$ = newast('+', $1,$3); }
-  | exp '-' exp                   { $$ = newast('-', $1,$3); }
-  | exp '*' exp                   { $$ = newast('*', $1,$3); }
-  | exp '/' exp                   { $$ = newast('/', $1,$3); }
-  | '(' exp ')'                   { $$ = $2; }
-  | '-' exp %prec UMINUS          { $$ = newast(UMINUSOP, $2, NULL); }
-  | NUMBER                        { $$ = newnum($1); }
-  | NAME                          { $$ = newref($1); }
-  | NAME '=' exp                  { $$ = newasgn($1, $3); }
-  | FUNC '(' explist ')'          { $$ = newfunc($1, $3); }
-  | NAME '(' explist ')'          { $$ = newcall($1, $3); }
-  | '{' '}'                       { $$ = newast(SETAST, NULL, NULL); }
-  | '{' explist '}'               { $$ = newast(SETAST, $2, NULL); }
-  | '[' ']'                       { $$ = newast(LISTAST, NULL, NULL); }
-  | '[' explist ']'               { $$ = newast(LISTAST, $2, NULL); }
-  | exp SETOP exp                 { $$ = newast($2, $1, $3); }
-  | ELEM                          { $$ = newelem($1); }
-  | exp LOGICOP exp               { $$ = newast($2, $1, $3); }
-  | NOT exp %prec NOT             { $$ = newast($1, $2, NULL); }
-  | exp '[' exp ']'               { $$ = newast(POSITIONEDELEM, $1, $3); } /* La primera posicion es 0 */
-  | POP exp                       { $$ = newast(POPOP, $2, NULL); }
-  | exp ':' exp                   { $$ = newast(ISCOINTAINED, $1, $3); }
-  | '#' NAME '[' exp ']' '=' exp  { $$ = newexchange($2, $4, $7); }
+  : exp CMP exp                                       { $$ = newcmp($2, $1, $3); }
+  | exp '+' exp                                       { $$ = newast('+', $1,$3); }
+  | exp '-' exp                                       { $$ = newast('-', $1,$3); }
+  | exp '*' exp                                       { $$ = newast('*', $1,$3); }
+  | exp '/' exp                                       { $$ = newast('/', $1,$3); }
+  | '(' exp ')'                                       { $$ = $2; }
+  | '-' exp %prec UMINUS                              { $$ = newast(UMINUSOP, $2, NULL); }
+  | NUMBER                                            { $$ = newnum($1); }
+  | NAME                                              { $$ = newref($1); }
+  | NAME '=' exp                                      { $$ = newasgn($1, $3); }
+  | FUNC '(' explist ')'                              { $$ = newfunc($1, $3); }
+  | NAME '(' explist ')'                              { $$ = newcall($1, $3); }
+  | '{' '}'                                           { $$ = newast(SETAST, NULL, NULL); }
+  | '{' explist '}'                                   { $$ = newast(SETAST, $2, NULL); }
+  | '[' ']'                                           { $$ = newast(LISTAST, NULL, NULL); }
+  | '[' explist ']'                                   { $$ = newast(LISTAST, $2, NULL); }
+  | exp SETOP exp                                     { $$ = newast($2, $1, $3); }
+  | ELEM                                              { $$ = newelem($1); }
+  | exp LOGICOP exp                                   { $$ = newast($2, $1, $3); }
+  | NOT exp %prec NOT                                 { $$ = newast($1, $2, NULL); }
+  | exp '[' exp ']' /* La primera posicion es 0 */    { $$ = newast(POSITIONEDELEM, $1, $3); }
+  | POP exp                                           { $$ = newast(POPOP, $2, NULL); }
+  | exp ':' exp                                       { $$ = newast(ISCOINTAINED, $1, $3); }
+  | '#' NAME '[' exp ']' '=' exp                      { $$ = newexchange($2, $4, $7); }
+  | '(' symlist ')' '=' '(' explist ')'               // TODO: completar
+  | NAME '=' '(' symlist ')'                          // TODO: completar
 ;
 
 explist
   : exp
-  | exp ',' explist               { $$ = newast('L', $1, $3); }
+  | exp ',' explist                                   { $$ = newast('L', $1, $3); }
 ;
 
 symlist
-  : NAME                          { $$ = newsymlist($1, NULL); }
-  | NAME ',' symlist              { $$ = newsymlist($1, $3); }
+  : NAME                                              { $$ = newsymlist($1, NULL, 0); }
+  | NAME ',' symlist                                  { $$ = newsymlist($1, $3, 0); }
+;
+
+symlistAM
+  : NAME                                              { $$ = newsymlist($1, NULL, 0); }
+  | NAME ',' symlistAM                                { $$ = newsymlist($1, $3, 0); }
+  | '#' NAME                                          { $$ = newsymlist($1, NULL, 1); }
+  | '#' NAME ',' symlistAM                            { $$ = newsymlist($1, $3, 1); }
 ;
 
 calclist

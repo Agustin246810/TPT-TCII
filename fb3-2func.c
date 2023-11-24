@@ -247,7 +247,7 @@ void treefree(ast a)
   free(a); /* always free the node itself */
 }
 
-struct symlist *newsymlist(struct symbol *sym, struct symlist *next)
+struct symlist *newsymlist(struct symbol *sym, struct symlist *next, int isRef)
 {
   struct symlist *sl = malloc(sizeof(struct symlist));
 
@@ -258,6 +258,7 @@ struct symlist *newsymlist(struct symbol *sym, struct symlist *next)
   }
   sl->sym = sym;
   sl->next = next;
+  sl->isref = isRef;
   return sl;
 }
 
@@ -297,9 +298,10 @@ tData eval(ast a)
     v = CopyDT(a->s->value);
     break;
   /* assignment */
-  case ASSIGNMENTAST: // TODO: liberar el anterior
+  case ASSIGNMENTAST:
     l = eval(a->v);
 
+    FreeDT(&a->s->value);
     a->s->value = CopyDT(l);
     v = CopyDT(l);
 
@@ -893,8 +895,6 @@ tData eval(ast a)
         v = CopyDT(l);
         FreeDT(&l);
       }
-      // else /* ya se contempla en el return */
-      //   v = CreateDoubleDT(0.0); /* a default value */
     }
     else
     {
@@ -904,8 +904,6 @@ tData eval(ast a)
         v = CopyDT(l);
         FreeDT(&l);
       }
-      // else  /* ya se contempla en el return */
-      //   v = CreateDoubleDT(0.0); /* a default value */
     }
     break;
     /* while/do */
@@ -1025,7 +1023,7 @@ static tData callbuiltin(ast f)
   tData aux = eval(f->l);
 
   if (TypeDT(aux) != DOUBLE) // Verificación del tipo de dato del parametro,
-  {                          // de momento solo admite DOUBLE
+  {                          // de momento solo admite DOUBLE, TODO: completar tipos
     yyerror("Wrong type of parameter: %d", TypeDT(aux));
 
     FreeDT(&aux);
@@ -1076,18 +1074,22 @@ static tData calluser(ast f)
   double v;
   int nargs;
   int i;
+
   if (!fn->func)
   {
     yyerror("call to undefined function", fn->name);
     return CreateDoubleDT(0);
   }
+
   /* count the arguments */
   sl = fn->syms;
+
   for (nargs = 0; sl; sl = sl->next)
     nargs++;
   /* prepare to save them */
   oldval = (double *)malloc(nargs * sizeof(double));
   newval = (double *)malloc(nargs * sizeof(double));
+
   if (!oldval || !newval)
   {
     yyerror("Out of space in %s", fn->name);
@@ -1118,6 +1120,7 @@ static tData calluser(ast f)
 
   /* save old values of dummies, assign new ones */
   sl = fn->syms;
+
   for (i = 0; i < nargs; i++)
   {
     struct symbol *s = sl->sym;
@@ -1125,22 +1128,27 @@ static tData calluser(ast f)
     s->value = CreateDoubleDT(newval[i]);
     sl = sl->next;
   }
+
   free(newval);
+
   /* evaluate the function */
   v = ValueDT(eval(fn->func));
+
   /* put the real values of the dummies back */
   sl = fn->syms;
+
   for (i = 0; i < nargs; i++)
   {
     struct symbol *s = sl->sym;
     s->value = CreateDoubleDT(oldval[i]);
     sl = sl->next;
   }
+
   free(oldval);
+
   return CreateDoubleDT(v);
 }
 
-/*AGREGADO NEWELEM*/
 ast newelem(char *c)
 {
   ast a = malloc(sizeof(struct tAst));

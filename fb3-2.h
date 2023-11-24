@@ -37,7 +37,6 @@
 #define ASSIGNMENTAST 813
 #define UFNCALLAST 814
 #define FNCALLAST 815
-// #define ABSVALUEAST 815
 
 /* interface to the lexer */
 extern int yylineno; /* from lexer */
@@ -62,8 +61,9 @@ struct symlist
 {
   struct symbol *sym;
   struct symlist *next;
+  int isref; // Para indicar si es ref o copia en Asignacion Multiple (0 o 1)
 };
-struct symlist *newsymlist(struct symbol *sym, struct symlist *next);
+struct symlist *newsymlist(struct symbol *sym, struct symlist *next, int isRef);
 void symlistfree(struct symlist *sl);
 /* node types
  * + - * / |

@@ -13,10 +13,12 @@
 #define INTERSOP 601
 #define DIFFOP 602
 #define ISCOINTAINED 603
+#define ISINCLUDED 604
 
 #define POPOP 700
-#define POSITIONEDELEM 701
-#define EXCHANGEOP 702
+#define PUSHOP 701
+#define POSITIONEDELEM 702
+#define EXCHANGEOP 703
 
 #define GREATEROP 801
 #define LESSEROP 802
@@ -71,7 +73,8 @@ enum bifs
   B_exp,
   B_log,
   B_print,
-  B_abs
+  B_abs,
+  B_size
 };
 
 struct tAst

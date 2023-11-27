@@ -22,7 +22,7 @@ int yylex(void);
 
 /* declare tokens */
 %token EOL
-%token IF ELSE WHILE LET FOREACH PUSH TO IN LARROW RARROW
+%token IF ELSE WHILE LET FOREACH PUSH TO LARROW RARROW
 %right '='
 %left <fn> LOGICOP
 %left <fn> SETOP
@@ -34,6 +34,7 @@ int yylex(void);
 %left '*' '/'
 %nonassoc UMINUS
 %nonassoc <fn> NOT
+%left IN
 %token <c> ELEM
 %token <s> NAME
 %token <d> NUMBER
@@ -51,6 +52,7 @@ stmt
   | IF '(' exp ')' '{' list '}' ELSE '{' list '}'     { $$ = newflow(IFAST, $3, $6, $10); }
   | WHILE '(' exp ')' '{' list '}'                    { $$ = newflow(WHILEAST, $3, $6, NULL); }
   | FOREACH NAME IN exp '{' list '}'                  { $$ = newforeach($2, $4, $6); }
+  | PUSH exp TO exp                                   { $$ = newast(PUSHOP, $2, $4); }
   | symlist LARROW explist                            { $$ = newmultiasgn($1, $3); } // No permite aliasing
   | NAME RARROW symlist                               { $$ = newmultiname($1, $3); } // No permite aliasing
   | NAME '=' '%' NAME                                 { $$ = newaliasing($1, $4); } // ALIASING
@@ -100,6 +102,7 @@ exp
   | '[' ']'                                           { $$ = newast(LISTAST, NULL, NULL); }
   | '[' explist ']'                                   { $$ = newast(LISTAST, $2, NULL); }
   | exp SETOP exp                                     { $$ = newast($2, $1, $3); }
+  | exp IN exp                                        { $$ = newast(ISINCLUDED, $1, $3); }
   | ELEM                                              { $$ = newelem($1); }
   | exp LOGICOP exp                                   { $$ = newast($2, $1, $3); }
   | NOT exp %prec NOT                                 { $$ = newast($1, $2, NULL); }

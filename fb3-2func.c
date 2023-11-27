@@ -262,6 +262,8 @@ void treefree(ast a)
   case INTERSOP:
   case EXCHANGEOP:
   case FOREACHAST:
+  case ISINCLUDED:
+  case PUSHOP:
     treefree(a->r);
   /* one subtree */
   // case ABSVALUEAST:
@@ -366,11 +368,11 @@ tData eval(ast a)
     { // La cantida de elementos siempre va a ser mayor a 0 por bison
       if (_elementCountSL(a->sl) > _elementCountEL(a->v))
       {
-        printf("Assignment error: there are more symbols than expressions.");
+        printf("Assignment error: there are more symbols than expressions.\n");
       }
       else
       {
-        printf("Assignment error: there are more expressions than symbols.");
+        printf("Assignment error: there are more expressions than symbols.\n");
       }
     }
     auxSL = a->sl;
@@ -410,7 +412,7 @@ tData eval(ast a)
 
     if (TypeDT(auxDT) != SET && TypeDT(auxDT) != LIST) // Comprobamos que el symbol contenga una lista o conjunto
     {
-      printf("Multiname error: type must be SET or LIST.");
+      printf("Multiname error: type must be SET or LIST.\n");
 
       FreeDT(&auxDT);
       break;
@@ -421,7 +423,7 @@ tData eval(ast a)
     {
       if (Cardinal(auxDT) != _elementCountSL(a->sl))
       {
-        printf("Multiname error: the amount of names and the cardinal of the set must be the same.");
+        printf("Multiname error: the amount of names and the cardinal of the set must be the same.\n");
 
         FreeDT(&auxDT);
         break;
@@ -431,7 +433,7 @@ tData eval(ast a)
     {
       if (SizeL(auxDT) != _elementCountSL(a->sl))
       {
-        printf("Multiname error: the amount of names and the size of the list must be the same.");
+        printf("Multiname error: the amount of names and the size of the list must be the same.\n");
 
         FreeDT(&auxDT);
         break;
@@ -453,7 +455,7 @@ tData eval(ast a)
 
     if (auxSL) // Significa que encontro el mismo nombre en la izquierda y la derecha
     {
-      printf("Multiname error: can't use the same name in the left and in the right.");
+      printf("Multiname error: can't use the same name in the left and in the right.\n");
 
       FreeDT(&auxDT);
       break;
@@ -504,7 +506,7 @@ tData eval(ast a)
 
     if (TypeDT(l) != DOUBLE)
     {
-      printf("Exchange error: position is not a number.");
+      printf("Exchange error: position is not a number.\n");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -513,7 +515,7 @@ tData eval(ast a)
 
     if (ValueDT(l) != floor(ValueDT(l)))
     {
-      printf("Exchange error: position is not an integer.");
+      printf("Exchange error: position is not an integer.\n");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -522,7 +524,7 @@ tData eval(ast a)
 
     if (ValueDT(l) < 0)
     {
-      printf("Exchange error: negative position.");
+      printf("Exchange error: negative position.\n");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -531,7 +533,7 @@ tData eval(ast a)
 
     if (ValueDT(l) >= SizeL(auxDT))
     {
-      printf("Exchange error: position overflow.");
+      printf("Exchange error: position overflow.\n");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -564,9 +566,6 @@ tData eval(ast a)
       {
         l = eval(auxAST->l);
         r = CreateDT3(SET, l);
-
-        // printf("\n");
-        // PrintDT(v);
 
         auxDT = Union(result, r);
 
@@ -659,14 +658,48 @@ tData eval(ast a)
     FreeDT(&r);
 
     break;
-  // TODO: Agregar el pertenece.
+
+  case ISINCLUDED:
+
+    l = eval(a->l);
+    r = eval(a->r);
+
+    if (TypeDT(r) != SET && TypeDT(r) != LIST)
+    {
+      printf("IsIncluded error: the second argument must be a set or list.\n");
+
+      FreeDT(&l);
+      FreeDT(&r);
+
+      break;
+    }
+
+    if (TypeDT(r) == SET) // En caso de ser conjunto
+    {
+      result = CreateDoubleDT(In(r, l) ? 1 : 0);
+    }
+    else // En caso de ser lista
+    {
+      for (int i = 1; i <= SizeL(r); i++)
+      {
+        if (CompareDT(l, ElemDT(r, i)))
+        {
+          result = CreateDoubleDT(1);
+
+          break;
+        } // En caso de salir del for sin pasar por el if va a quedar con valor 0 en el return
+      }
+    }
+
+    break;
+
   case ISCOINTAINED:
     l = eval(a->l);
     r = eval(a->r);
 
     if (TypeDT(l) != SET || TypeDT(r) != SET)
     {
-      printf("IsContainer error: at least one of the operands is not a set.\n");
+      printf("IsContained error: at least one of the operands is not a set.\n");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -712,9 +745,9 @@ tData eval(ast a)
   /*POP*/
   case POPOP:
 
-    if (a->l->nodetype == SYMREFAST)
+    if (a->l->nodetype == SYMREFAST) // En caso de ser un symbol
       l = a->l->s->value;
-    else
+    else // En caso de ser un literal
       l = eval(a->l);
 
     if (TypeDT(l) != LIST)
@@ -739,6 +772,34 @@ tData eval(ast a)
       FreeDT(&l);
 
     break;
+
+  case PUSHOP:
+    if (a->r->nodetype == SYMREFAST) // En caso de ser un symbol
+      r = a->r->s->value;
+    else // En caso de ser un literal
+      r = eval(a->r);
+
+    if (TypeDT(r) != LIST)
+    {
+      printf("Invalid PUSH: the right expression is not a list.\n");
+      if (a->r->nodetype != SYMREFAST)
+        FreeDT(&r);
+      break;
+    }
+
+    l = eval(a->l);
+
+    Push(r, l);
+
+    result = CopyDT(r);
+
+    FreeDT(&l);
+
+    if (a->r->nodetype != SYMREFAST)
+      FreeDT(&r);
+
+    break;
+
   /* Positioned Element */
   case POSITIONEDELEM:
 
@@ -1075,47 +1136,62 @@ tData eval(ast a)
     /* null expressions allowed in the grammar, so check for them */
     /* if/then/else */
   case IFAST: // TODO: comprobar tipos
-    if (ValueDT(eval(a->cond)) != 0)
+    auxDT = eval(a->cond);
+
+    if (TypeDT(auxDT) != DOUBLE)
+    {
+      printf("If error: the condition must be a number.\n");
+
+      FreeDT(&auxDT);
+
+      break;
+    }
+
+    if (ValueDT(auxDT) != 0)
     {
       if (a->tl)
       {
-        l = eval(a->tl);
-        result = CopyDT(l);
-        FreeDT(&l);
+        result = eval(a->tl);
       }
     }
     else
     {
       if (a->el)
       {
-        l = eval(a->el);
-        result = CopyDT(l);
-        FreeDT(&l);
+        result = eval(a->el);
       }
     }
+
+    FreeDT(&auxDT);
+
     break;
     /* while/do */
-  case WHILEAST:                  // TODO: comprobar tipos
-    result = CreateDoubleDT(0.0); /* a default value */
+  case WHILEAST:
+
+    r = eval(a->cond);
+
+    if (TypeDT(r) != DOUBLE)
+    {
+      printf("While error: the condition must be a number.\n");
+
+      break;
+    }
 
     if (a->tl)
     {
-      r = eval(a->cond);
-
       while (ValueDT(r) != 0)
       {
-        FreeDT(&result);
+        FreeDT(&result); // Se libera el anterior
 
-        l = eval(a->tl);
-        result = CopyDT(l);
-        FreeDT(&l);
+        result = eval(a->tl);
 
         FreeDT(&r);
         r = eval(a->cond);
       }
-
-      FreeDT(&r);
     }
+
+    FreeDT(&r);
+
     break; /* value of last statement is value of while/do */
 
   case FOREACHAST:
@@ -1208,33 +1284,101 @@ static tData callbuiltin(ast f)
 {
   enum bifs functype = f->functype;
 
-  tData aux = eval(f->l);
+  tData auxDT = eval(f->l);
 
-  if (TypeDT(aux) != DOUBLE) // Verificación del tipo de dato del parametro,
-  {                          // de momento solo admite DOUBLE, TODO: completar tipos
-    yyerror("Wrong type of parameter: %d", TypeDT(aux));
-
-    FreeDT(&aux);
-
-    return CreateDoubleDT(0.0);
-  }
-
-  double v = ValueDT(aux);
-  FreeDT(&aux);
+  double result = 0;
 
   switch (functype)
   {
   case B_sqrt:
-    return CreateDoubleDT(sqrt(v));
+    if (TypeDT(auxDT) != DOUBLE)
+    {
+      yyerror("Wrong type of parameter: %d", TypeDT(auxDT));
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    result = sqrt(ValueDT(auxDT));
+
+    FreeDT(&auxDT);
+
+    return CreateDoubleDT(result);
+
   case B_exp:
-    return CreateDoubleDT(exp(v));
+    if (TypeDT(auxDT) != DOUBLE)
+    {
+      yyerror("Wrong type of parameter: %d", TypeDT(auxDT));
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    result = exp(ValueDT(auxDT));
+
+    FreeDT(&auxDT);
+
+    return CreateDoubleDT(result);
+
   case B_log:
-    return CreateDoubleDT(log(v));
-  case B_print:
-    printf("= %4.4g\n", v);
-    return CreateDoubleDT(v);
+    if (TypeDT(auxDT) != DOUBLE)
+    {
+      yyerror("Wrong type of parameter: %d", TypeDT(auxDT));
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    result = log(ValueDT(auxDT));
+
+    FreeDT(&auxDT);
+
+    return CreateDoubleDT(result);
+
+  case B_print: // Aqui no importa el tipo
+    printf("= ");
+    PrintDT(auxDT);
+    printf("\n");
+
+    return auxDT; // En vez de liberarlo, lo devolvemos
+
   case B_abs:
-    return CreateDoubleDT(fabs(v));
+    if (TypeDT(auxDT) != DOUBLE)
+    {
+      yyerror("Wrong type of parameter: %d", TypeDT(auxDT));
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    result = fabs(ValueDT(auxDT));
+
+    FreeDT(&auxDT);
+
+    return CreateDoubleDT(result);
+
+  case B_size:
+    if (TypeDT(auxDT) != SET && TypeDT(auxDT) != LIST)
+    {
+      yyerror("The parameter must be a set or list.");
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    if (TypeDT(auxDT) == SET)
+    {
+      result = Cardinal(auxDT);
+    }
+    else
+    {
+      result = SizeL(auxDT);
+    }
+
+    FreeDT(&auxDT);
+
+    return CreateDoubleDT(result);
+
   default:
     yyerror("Unknown built-in function %d", functype);
     return CreateDoubleDT(0.0);

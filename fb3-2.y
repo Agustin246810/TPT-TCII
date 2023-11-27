@@ -22,7 +22,7 @@ int yylex(void);
 
 /* declare tokens */
 %token EOL
-%token IF ELSE WHILE LET FOREACH PUSH TO IN
+%token IF ELSE WHILE LET FOREACH PUSH TO IN LARROW RARROW
 %right '='
 %left <fn> LOGICOP
 %left <fn> SETOP
@@ -39,7 +39,8 @@ int yylex(void);
 %token <d> NUMBER
 %token <fn> FUNC
 %type <a> exp stmt list explist
-%type <sl> symlist symlistAM
+%type <sl> symlist 
+/* %type <sl> symlistAM */
 
 %start calclist
 
@@ -50,8 +51,25 @@ stmt
   | IF '(' exp ')' '{' list '}' ELSE '{' list '}'     { $$ = newflow(IFAST, $3, $6, $10); }
   | WHILE '(' exp ')' '{' list '}'                    { $$ = newflow(WHILEAST, $3, $6, NULL); }
   | FOREACH NAME IN exp '{' list '}'                  { $$ = newforeach($2, $4, $6); }
-  | exp
+  | symlist LARROW explist                            { $$ = newmultiasgn($1, $3); } // No permite aliasing
+  | NAME RARROW symlist                               { $$ = newmultiname($1, $3); } // No permite aliasing
+  | NAME '=' '%' NAME                                 { $$ = newaliasing($1, $4); } // ALIASING
+  | exp                                               { $$ = $1; }
 ;
+
+/*
+
+a = 1
+b = 2
+b = %a       (b = 1)  (2? lo libero? {deberia})
+b = 3        (a = 3)  (1? no se libera, se sobrescribe)
+c = 4
+d = 5
+d = %c       (d = 4)  (5? lo libero? {deberia})
+b = %c       (b = 4)  (3? lo libero? {no puedo} a tambien pasa a ser alias de c?)
+
+*/
+
 
 list
   : /* nothing */                                     { $$ = NULL; }
@@ -85,12 +103,10 @@ exp
   | ELEM                                              { $$ = newelem($1); }
   | exp LOGICOP exp                                   { $$ = newast($2, $1, $3); }
   | NOT exp %prec NOT                                 { $$ = newast($1, $2, NULL); }
-  | exp '[' exp ']' /* La primera posicion es 0 */    { $$ = newast(POSITIONEDELEM, $1, $3); }
+  | exp '[' exp ']'                                   { $$ = newast(POSITIONEDELEM, $1, $3); } // La primera posicion es 0
   | POP exp                                           { $$ = newast(POPOP, $2, NULL); }
   | exp ':' exp                                       { $$ = newast(ISCOINTAINED, $1, $3); }
   | '#' NAME '[' exp ']' '=' exp                      { $$ = newexchange($2, $4, $7); }
-  | '(' symlist ')' '=' '(' explist ')'               // TODO: completar
-  | NAME '=' '(' symlist ')'                          // TODO: completar
 ;
 
 explist
@@ -99,16 +115,16 @@ explist
 ;
 
 symlist
-  : NAME                                              { $$ = newsymlist($1, NULL, 0); }
-  | NAME ',' symlist                                  { $$ = newsymlist($1, $3, 0); }
+  : NAME                                              { $$ = newsymlist($1, NULL); }
+  | NAME ',' symlist                                  { $$ = newsymlist($1, $3); }
 ;
 
-symlistAM
+/* symlistAM
   : NAME                                              { $$ = newsymlist($1, NULL, 0); }
   | NAME ',' symlistAM                                { $$ = newsymlist($1, $3, 0); }
-  | '#' NAME                                          { $$ = newsymlist($1, NULL, 1); }
-  | '#' NAME ',' symlistAM                            { $$ = newsymlist($1, $3, 1); }
-;
+  | '#' NAME                                          { $$ = newsymlist($2, NULL, 1); }
+  | '#' NAME ',' symlistAM                            { $$ = newsymlist($2, $4, 1); }
+; */
 
 calclist
   : /* nothing */

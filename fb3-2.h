@@ -1,9 +1,5 @@
 #include "TDataType.h"
-/*
- * Declarations for a calculator fb3-1
- */
 
-/*AGREGADO*/
 #define SETAST 400
 #define LISTAST 401
 #define ELEMAST 402
@@ -35,8 +31,11 @@
 #define WHILEAST 811
 #define FOREACHAST 812
 #define ASSIGNMENTAST 813
-#define UFNCALLAST 814
-#define FNCALLAST 815
+#define MULTIASSIGNMENTAST 814
+#define ALIASINGAST 815
+#define MULTINAMEAST 816
+#define UFNCALLAST 817
+#define FNCALLAST 818
 
 /* interface to the lexer */
 extern int yylineno; /* from lexer */
@@ -61,25 +60,11 @@ struct symlist
 {
   struct symbol *sym;
   struct symlist *next;
-  int isref; // Para indicar si es ref o copia en Asignacion Multiple (0 o 1)
+  // int isref; // Para indicar si es ref o copia en Asignacion Multiple (0 o 1)
 };
-struct symlist *newsymlist(struct symbol *sym, struct symlist *next, int isRef);
+struct symlist *newsymlist(struct symbol *sym, struct symlist *next);
 void symlistfree(struct symlist *sl);
-/* node types
- * + - * / |
- * 0-7 comparison ops, bit coded 04 equal, 02 less, 01 greater
- * M unary minus
- * L expression or statement list
- * I IF statement
- * W WHILE statement
- * N symbol ref
- * = assignment
- * S list of symbols
- * F built in function call
- * C user function call
- *
- *
- */
+
 enum bifs
 { /* built-in functions */
   B_sqrt = 1,
@@ -88,22 +73,20 @@ enum bifs
   B_print,
   B_abs
 };
-/* nodes in the abstract syntax tree */
-/* all have common initial nodetype */
 
 struct tAst
 {
   int nodetype;
   union
   {
-    struct // para el ast, fncall y ufncall
+    struct // para el ast, fncall, ufncall y Foreach
     {
       struct tAst *l;
       union
       {
         struct
         {
-          struct tAst *r;        // ast y exchangeL
+          struct tAst *r;        // ast, exchangeL y Foreach
           struct symbol *symvar; // solo para exchangeL y Foreach
         };
         enum bifs functype; // fncall
@@ -118,10 +101,17 @@ struct tAst
       struct tAst *el;   // optional else branch
     };
 
-    struct // para el symref y symasgn
+    struct // para el symasgn, multiasgn, symref y multiname
     {
-      struct symbol *s;
-      struct tAst *v; // solo para el symasgn
+      struct tAst *v;     // para el symasgn, multiasgn y symref
+      struct symbol *s;   // para symasgn, symref y multiname
+      struct symlist *sl; // para multiasgn y multiname
+    };
+
+    struct // para el aliasing
+    {
+      struct symbol *asrc;
+      struct symbol *adest;
     };
 
     double number; // para el numval
@@ -136,11 +126,14 @@ ast newfunc(int functype, ast l);
 ast newcall(struct symbol *s, ast l);
 ast newref(struct symbol *s);
 ast newasgn(struct symbol *s, ast v);
+ast newmultiasgn(struct symlist *sl, ast v);
 ast newnum(double d);
 ast newflow(int nodetype, ast cond, ast tl, ast el);
 ast newelem(char *c);
 ast newexchange(struct symbol *s, ast l, ast r);
 ast newforeach(struct symbol *sym, ast exp, ast tl);
+ast newaliasing(struct symbol *dest, struct symbol *src);
+ast newmultiname(struct symbol *s, struct symlist *sl);
 
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, ast stmts);

@@ -41,3 +41,92 @@ list afnd2afd(list A){
 
 //Pensar que hacer si tenemos una lista por ej A= [1,2,3] y si podemos hacer A[3]= 4 tendriamos A=[1,2,4]
 //pero que pasaria si A[5], opcion 1: A=[5] -> [1,2,4,0,5] o -> error
+
+
+a = [{'q0,'q1,'q2},{'0,'1},{['q0,'0,{'q0}],['q0,'1,{'q0,'q1}],['q1,'0,{}],['q1,'1,{'q2}],['q2,'0,{'q2}],['q2,'1,{'q0,'q1}]},'q0,{'q1,'q2}]
+
+foreach R in QB {foreach x in Sigma {newtrans = [R,x,{}]; newq = {}; foreach q in R {foreach T in Delta{if((q in T) && (x in T)){newq = newq | T[2];};};};# newtrans[2] = newq; DeltaB = DeltaB | {newq}; QB = QB | {newq};};}
+
+foreach S in QB {if((S & F) != {}){ FB = FB | {S};};}
+
+[{{'q0},{'q0,'q1},{'q0,'q1,'q2},{'q0,'q2}},{'0,'1},{{'q0},{'q0,'q1},{'q0,'q1,'q2},{'q0,'q2}},{'q0},{{'q0,'q1},{'q0,'q1,'q2},{'q0,'q2}}]
+
+
+
+
+
+
+
+
+
+
+
+
+
+[{{'q0},{'q0,'q1},{'q0,'q1,'q2},{'q0,'q2}},{'0,'1},{[{'q0},'0,{'q0}],[{'q0},'1,{'q0,'q1}],[{'q0,'q1},'0,{'q0}],[{'q0,'q1},'1,{'q0,'q1,'q2}],[{'q0,'q1,'q2},'0,{'q0,'q2}],[{'q0,'q1,'q2},'1,{'q0,'q1,'q2}],[{'q0,'q2},'0,{'q0,'q2}],[{'q0,'q2},'1,{'q0,'q1}]},{'q0},{'q0,'q1,'q2}]
+
+[{{'q0},{'q0,'q1},{'q2,'q0,'q1},{'q0,'q2}},{'0,'1},{[{'q0},'0,{'q0}],[{'q0},'1,{'q0,'q1}],[{'q0,'q1},'0,{'q0}],[{'q0,'q1},'1,{'q2,'q0,'q1}],[{'q2,'q0,'q1},'0,{'q0,'q2}],[{'q2,'q0,'q1},'1,{'q2,'q0,'q1}],[{'q0,'q2},'0,{'q2,'q0}],[{'q0,'q2},'1,{'q0,'q1}]},{'q0},{{'q0,'q1},{'q2,'q0,'q1},{'q0,'q2}}]
+
+
+
+
+AFND = [{'q0,'q1},{'0,'1},{['q0,'0,{'q0}],['q0,'1,{'q1}],['q1,'0,{'q1}],['q1,'1,{'q0}]},'q0,{'q1}]
+
+AFND = [{'q0,'q1,'q2},{'0,'1},{['q0,'0,{'q0}],['q0,'1,{'q0,'q1}],['q1,'0,{}],['q1,'1,{'q2}],['q2,'0,{'q2}],['q2,'1,{'q0,'q1}]},'q0,{'q1,'q2}]
+
+AFND >> stateSetND, alphabetND, transitionsND, initialStateND, acceptanceStatesND
+
+position, alphabet, initialState, stateSet, transitions, acceptanceStates << 0, alphabetND, {initialStateND}, {{initialStateND}}, {}, {}
+
+while(position < size(stateSet)){
+  foreach i in alphabet {
+    partialState = {};
+    
+    foreach j in stateSet[position] {
+      foreach k in transitionsND{
+        if( k[0] == j ){
+          if( k[1] == i ){
+            partialState = partialState | k[2];
+          };
+        };
+      };
+    };
+
+    aux1 = [];
+    push stateSet[position] to aux1;
+    push i to aux1;
+    push partialState to aux1;
+
+    transitions = transitions | {aux1};
+
+    if( ! ( partialState in stateSet ) ){
+      stateSet = stateSet | {partialState};
+    };
+  };
+
+  position = position + 1;
+}
+
+while(position < size(stateSet)){foreach i in alphabet {partialState = {};foreach j in stateSet[position] {foreach k in transitionsND{if( k[0] == j ){if( k[1] == i ){partialState = partialState | k[2];};};};};aux1 = [];push stateSet[position] to aux1;push i to aux1;push partialState to aux1;transitions = transitions | {aux1};if( ! ( partialState in stateSet ) ){stateSet = stateSet | {partialState};};};position = position + 1;}
+
+foreach i in stateSet{
+  aux1 = i & acceptanceStatesND;
+
+  if( aux1 != {} ){
+    acceptanceStates = acceptanceStates | i;
+  };
+}
+
+foreach i in stateSet{aux1 = i & acceptanceStatesND;if( aux1 != {} ){acceptanceStates = acceptanceStates | i;};}
+
+AFD = [stateSet, alphabet, transitions, initialState, acceptanceStates]
+
+
+
+
+
+
+
+
+
+

@@ -72,7 +72,6 @@ b = %c       (b = 4)  (3? lo libero? {no puedo} a tambien pasa a ser alias de c?
 
 */
 
-
 list
   : /* nothing */                                     { $$ = NULL; }
   | stmt ';' list

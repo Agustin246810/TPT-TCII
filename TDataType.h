@@ -48,6 +48,8 @@ void PrintDT(tData tree);
 int TypeDT(tData d);
 // Retorna 0 cuando los elementos son distintos y 1 cuando son iguales.
 int CompareDT(tData elem1, tData elem2);
+// Sobrescribe un DataType con otro especificado, liberando previamente el destino
+void Overwrite(tData source, tData dest);
 
 /*Operaciones con STR*/
 

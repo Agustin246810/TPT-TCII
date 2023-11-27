@@ -926,3 +926,40 @@ tData CreateNullDT()
   tData NullDT = NULL;
   return NullDT;
 }
+
+void Overwrite(tData source, tData dest)
+{
+  // Liberacion de memoria
+  if (dest->nodeType == LIST || dest->nodeType == SET) // En caso de ser conjunto o lista
+  {
+    FreeDT(&dest->next); // Se libera todo el hijo derecho
+    FreeDT(&dest->data); // Se libera todo el hijo izquierdo
+  }
+  else
+  {
+    if (dest->nodeType == STR) // En caso de ser un STR, se libera la cadena que contiene
+    {
+      FreeString(&dest->dataStr);
+    }
+    // En caso de ser DOUBLE, no hay nada para liberar
+  }
+
+  // Realizando la sobrescritura
+  dest->nodeType = source->nodeType; // Se copia el tipo de dato
+
+  if (source->nodeType == LIST || source->nodeType == SET) // En caso de ser conjunto o lista
+  {
+    dest->next = CopyDT(source->next);
+    dest->data = CopyDT(source->data);
+    return;
+  }
+
+  if (source->nodeType == DOUBLE) // En caso de ser DOUBLE
+  {
+    dest->value = source->value;
+    return;
+  }
+
+  // En caso de ser STR
+  dest->dataStr = strdup(source->dataStr);
+}

@@ -8,6 +8,12 @@
 #include <math.h>
 #include "fb3-2.h"
 #include "TDataType.h"
+
+// Devuelve la cantidad de elementos de una symlist
+int _elementCountSL(struct symlist *sl);
+// Devuelve la cantidad de elementos de una explist (ast)
+int _elementCountEL(ast explist);
+
 /* symbol table */
 /* hash a symbol */
 static unsigned symhash(char *sym)
@@ -46,7 +52,7 @@ struct symbol *lookup(char *sym)
 
 ast newast(int nodetype, ast l, ast r)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -61,7 +67,7 @@ ast newast(int nodetype, ast l, ast r)
 
 ast newnum(double d)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -75,7 +81,7 @@ ast newnum(double d)
 
 ast newcmp(int cmptype, ast l, ast r)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -90,7 +96,7 @@ ast newcmp(int cmptype, ast l, ast r)
 
 ast newfunc(int functype, ast l)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -105,7 +111,7 @@ ast newfunc(int functype, ast l)
 
 ast newcall(struct symbol *s, ast l)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -120,7 +126,7 @@ ast newcall(struct symbol *s, ast l)
 
 ast newref(struct symbol *s)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -132,9 +138,23 @@ ast newref(struct symbol *s)
   return a;
 }
 
+ast newmultiasgn(struct symlist *sl, ast v)
+{
+  ast a = (ast)malloc(sizeof(struct tAst));
+  if (!a)
+  {
+    yyerror("out of space");
+    exit(0);
+  }
+  a->nodetype = MULTIASSIGNMENTAST;
+  a->sl = sl;
+  a->v = v;
+  return a;
+}
+
 ast newasgn(struct symbol *s, ast v)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
   if (!a)
   {
     yyerror("out of space");
@@ -148,7 +168,7 @@ ast newasgn(struct symbol *s, ast v)
 
 ast newflow(int nodetype, ast cond, ast tl, ast el)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -164,7 +184,7 @@ ast newflow(int nodetype, ast cond, ast tl, ast el)
 
 ast newforeach(struct symbol *sym, ast exp, ast tl)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -176,6 +196,38 @@ ast newforeach(struct symbol *sym, ast exp, ast tl)
   a->l = exp;
   a->r = tl;
 
+  return a;
+}
+
+ast newaliasing(struct symbol *dest, struct symbol *src)
+{
+  ast a = (ast)malloc(sizeof(struct tAst));
+
+  if (!a)
+  {
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = ALIASINGAST;
+  a->adest = dest;
+  a->asrc = src;
+  return a;
+}
+
+ast newmultiname(struct symbol *s, struct symlist *sl)
+{
+  ast a = (ast)malloc(sizeof(struct tAst));
+
+  if (!a)
+  {
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = MULTINAMEAST;
+  a->s = s;
+  a->sl = sl;
   return a;
 }
 
@@ -224,9 +276,17 @@ void treefree(ast a)
   /* no subtree */
   case CONSTANTAST:
   case SYMREFAST:
+  case ALIASINGAST:
     break;
   case ASSIGNMENTAST:
-    free(a->v);
+    treefree(a->v);
+    break;
+  case MULTIASSIGNMENTAST:
+    symlistfree(a->sl);
+    treefree(a->v);
+    break;
+  case MULTINAMEAST:
+    symlistfree(a->sl);
     break;
     /* up to three subtrees */
   case IFAST:
@@ -247,9 +307,9 @@ void treefree(ast a)
   free(a); /* always free the node itself */
 }
 
-struct symlist *newsymlist(struct symbol *sym, struct symlist *next, int isRef)
+struct symlist *newsymlist(struct symbol *sym, struct symlist *next)
 {
-  struct symlist *sl = malloc(sizeof(struct symlist));
+  struct symlist *sl = (struct symlist *)malloc(sizeof(struct symlist));
 
   if (!sl)
   {
@@ -258,7 +318,7 @@ struct symlist *newsymlist(struct symbol *sym, struct symlist *next, int isRef)
   }
   sl->sym = sym;
   sl->next = next;
-  sl->isref = isRef;
+  // sl->isref = isRef;
   return sl;
 }
 
@@ -280,8 +340,10 @@ static tData calluser(ast);
 tData eval(ast a)
 {
   ast auxAST; // variable auxiliar para recorrer un subarbol
-  tData v = NULL;
+  tData result = NULL;
   tData l, r, auxDT; // Auxiliares para liberar memoria
+  struct symlist *auxSL;
+  int i = 0;
   if (!a)
   {
     yyerror("internal error, null eval");
@@ -291,21 +353,147 @@ tData eval(ast a)
   {
   /* constant */
   case CONSTANTAST:
-    v = CreateDoubleDT(a->number);
+    result = CreateDoubleDT(a->number);
     break;
   /* name reference */
   case SYMREFAST:
-    v = CopyDT(a->s->value);
+    result = CopyDT(a->s->value);
     break;
   /* assignment */
+  case MULTIASSIGNMENTAST:
+    // En caso de que tengan distinta cantidad de elementos
+    if (_elementCountSL(a->sl) != _elementCountEL(a->v))
+    { // La cantida de elementos siempre va a ser mayor a 0 por bison
+      if (_elementCountSL(a->sl) > _elementCountEL(a->v))
+      {
+        printf("Assignment error: there are more symbols than expressions.");
+      }
+      else
+      {
+        printf("Assignment error: there are more expressions than symbols.");
+      }
+    }
+    auxSL = a->sl;
+    auxAST = a->v;
+
+    // Se asignan todos menos el ultimo elemento
+    while (auxAST->nodetype == 'L')
+    {
+      auxDT = eval(auxAST->l);
+
+      Overwrite(auxDT, auxSL->sym->value);
+
+      FreeDT(&auxDT);
+
+      auxSL = auxSL->next;
+      auxAST = auxAST->r;
+    }
+
+    // Se asigna el ultimo elemento
+    auxDT = eval(auxAST);
+
+    Overwrite(auxDT, auxSL->sym->value);
+
+    FreeDT(&auxDT);
+    break;
+
   case ASSIGNMENTAST:
-    l = eval(a->v);
+    result = eval(a->v);
 
-    FreeDT(&a->s->value);
-    a->s->value = CopyDT(l);
-    v = CopyDT(l);
+    Overwrite(result, a->s->value);
 
-    FreeDT(&l);
+    break;
+
+  case MULTINAMEAST:
+
+    auxDT = CopyDT(a->s->value);
+
+    if (TypeDT(auxDT) != SET && TypeDT(auxDT) != LIST) // Comprobamos que el symbol contenga una lista o conjunto
+    {
+      printf("Multiname error: type must be SET or LIST.");
+
+      FreeDT(&auxDT);
+      break;
+    }
+
+    // Comprobamos que el tamaño de la estructura coincida con la cantidad de simbolos
+    if (TypeDT(auxDT) == SET)
+    {
+      if (Cardinal(auxDT) != _elementCountSL(a->sl))
+      {
+        printf("Multiname error: the amount of names and the cardinal of the set must be the same.");
+
+        FreeDT(&auxDT);
+        break;
+      }
+    }
+    else
+    {
+      if (SizeL(auxDT) != _elementCountSL(a->sl))
+      {
+        printf("Multiname error: the amount of names and the size of the list must be the same.");
+
+        FreeDT(&auxDT);
+        break;
+      }
+    }
+
+    // Comprobamos que el simbolo a la izquierda no se llame a la derecha
+    auxSL = a->sl;
+
+    while (auxSL)
+    {
+      if (a->s == auxSL->sym)
+      {
+        break;
+      }
+
+      auxSL = auxSL->next;
+    }
+
+    if (auxSL) // Significa que encontro el mismo nombre en la izquierda y la derecha
+    {
+      printf("Multiname error: can't use the same name in the left and in the right.");
+
+      FreeDT(&auxDT);
+      break;
+    }
+
+    // Asignaciones
+    auxSL = a->sl;
+    i = 1;
+
+    while (auxSL)
+    {
+      auxSL->sym->value = CopyDT(ElemDT(auxDT, i));
+
+      auxSL = auxSL->next;
+      i++;
+    }
+
+    result = auxDT;
+
+    break;
+
+  case ALIASINGAST:
+    // Liberacion de memoria
+    for (i = 0; i < NHASH - 1; i++)
+    {
+      if ((&symtab[i])->value == a->adest->value && (&symtab[i]) != a->adest)
+      {
+        break;
+      }
+    }
+
+    if (i == NHASH - 1 && (&symtab[i])->value != a->adest->value)
+    {
+      FreeDT(&(a->adest->value));
+    }
+
+    a->adest->value = a->asrc->value;
+
+    result = CopyDT(a->adest->value);
+
     break;
 
   /*Assigment Exchange*/
@@ -316,7 +504,7 @@ tData eval(ast a)
 
     if (TypeDT(l) != DOUBLE)
     {
-      printf("Error: position is not a number.");
+      printf("Exchange error: position is not a number.");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -325,7 +513,7 @@ tData eval(ast a)
 
     if (ValueDT(l) != floor(ValueDT(l)))
     {
-      printf("Error: position is not an integer.");
+      printf("Exchange error: position is not an integer.");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -334,7 +522,7 @@ tData eval(ast a)
 
     if (ValueDT(l) < 0)
     {
-      printf("Error: negative position.");
+      printf("Exchange error: negative position.");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -343,7 +531,7 @@ tData eval(ast a)
 
     if (ValueDT(l) >= SizeL(auxDT))
     {
-      printf("Error: position overflow.");
+      printf("Exchange error: position overflow.");
 
       FreeDT(&l);
       FreeDT(&r);
@@ -352,7 +540,7 @@ tData eval(ast a)
 
     ExchangeL(auxDT, r, (int)ValueDT(l) + 1);
 
-    v = CopyDT(ElemDT(auxDT, (int)ValueDT(l) + 1));
+    result = CopyDT(ElemDT(auxDT, (int)ValueDT(l) + 1));
 
     FreeDT(&l);
     FreeDT(&r);
@@ -361,12 +549,12 @@ tData eval(ast a)
 
   /* Elem */
   case ELEMAST:
-    v = CreateDT(a->c);
+    result = CreateDT(a->c);
     break;
 
   /* Literal Set */
   case SETAST:
-    v = CreateDT("{}"); // Se crea el conjunto originalmente vacio
+    result = CreateDT("{}"); // Se crea el conjunto originalmente vacio
 
     if (a->l) // En caso de contener expresiones, se agregan una por una
     {
@@ -380,13 +568,13 @@ tData eval(ast a)
         // printf("\n");
         // PrintDT(v);
 
-        auxDT = Union(v, r);
+        auxDT = Union(result, r);
 
         FreeDT(&l);
         FreeDT(&r);
-        FreeDT(&v);
+        FreeDT(&result);
 
-        v = auxDT;
+        result = auxDT;
         auxDT = NULL;
 
         auxAST = auxAST->r;
@@ -396,13 +584,13 @@ tData eval(ast a)
       l = eval(auxAST);
       r = CreateDT3(SET, l);
 
-      auxDT = Union(v, r);
+      auxDT = Union(result, r);
 
       FreeDT(&l);
       FreeDT(&r);
-      FreeDT(&v);
+      FreeDT(&result);
 
-      v = auxDT;
+      result = auxDT;
       auxDT = NULL;
     }
     break;
@@ -423,7 +611,7 @@ tData eval(ast a)
       break;
     }
 
-    v = Union(l, r);
+    result = Union(l, r);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -444,7 +632,7 @@ tData eval(ast a)
       break;
     }
 
-    v = Inter(l, r);
+    result = Inter(l, r);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -465,7 +653,7 @@ tData eval(ast a)
       break;
     }
 
-    v = Diff(l, r);
+    result = Diff(l, r);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -486,7 +674,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT(IsContained(l, r) ? 1 : 0);
+    result = CreateDoubleDT(IsContained(l, r) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -495,7 +683,7 @@ tData eval(ast a)
 
   /* Literal List */
   case LISTAST:
-    v = CreateDT("[]"); // Se crea la lista originalmente vacia
+    result = CreateDT("[]"); // Se crea la lista originalmente vacia
 
     if (a->l) // En caso de contener expresiones, se agregan una por una
     {
@@ -505,7 +693,7 @@ tData eval(ast a)
       {
         l = eval(auxAST->l);
 
-        Push(v, l);
+        Push(result, l);
 
         FreeDT(&l);
 
@@ -515,7 +703,7 @@ tData eval(ast a)
       // Se agrega el ultimo elemento que esta en el hijo derecho de la ultima 'L'
       l = eval(auxAST);
 
-      Push(v, l);
+      Push(result, l);
 
       FreeDT(&l);
     }
@@ -545,7 +733,7 @@ tData eval(ast a)
       break;
     }
 
-    v = Pop(&l);
+    result = Pop(&l);
 
     if (a->l->nodetype != SYMREFAST)
       FreeDT(&l);
@@ -622,7 +810,7 @@ tData eval(ast a)
         break;
       }
     }
-    v = CopyDT(ElemDT(l, ((int)ValueDT(r)) + 1));
+    result = CopyDT(ElemDT(l, ((int)ValueDT(r)) + 1));
 
     FreeDT(&l);
     FreeDT(&r);
@@ -644,7 +832,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT(ValueDT(l) + ValueDT(r));
+    result = CreateDoubleDT(ValueDT(l) + ValueDT(r));
 
     FreeDT(&l);
     FreeDT(&r);
@@ -663,7 +851,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT(ValueDT(l) - ValueDT(r));
+    result = CreateDoubleDT(ValueDT(l) - ValueDT(r));
 
     FreeDT(&l);
     FreeDT(&r);
@@ -682,7 +870,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT(ValueDT(l) * ValueDT(r));
+    result = CreateDoubleDT(ValueDT(l) * ValueDT(r));
 
     FreeDT(&l);
     FreeDT(&r);
@@ -701,7 +889,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT(ValueDT(l) / ValueDT(r));
+    result = CreateDoubleDT(ValueDT(l) / ValueDT(r));
 
     FreeDT(&l);
     FreeDT(&r);
@@ -719,7 +907,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT(-ValueDT(l));
+    result = CreateDoubleDT(-ValueDT(l));
 
     FreeDT(&l);
     break;
@@ -739,7 +927,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT((ValueDT(l) > ValueDT(r)) ? 1 : 0);
+    result = CreateDoubleDT((ValueDT(l) > ValueDT(r)) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -759,7 +947,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT((ValueDT(l) < ValueDT(r)) ? 1 : 0);
+    result = CreateDoubleDT((ValueDT(l) < ValueDT(r)) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -770,7 +958,7 @@ tData eval(ast a)
     r = eval(a->r);
 
     // v = CreateDoubleDT((ValueDT(l) != ValueDT(r)) ? 1 : 0);
-    v = CreateDoubleDT((!CompareDT(l, r)) ? 1 : 0);
+    result = CreateDoubleDT((!CompareDT(l, r)) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -781,7 +969,7 @@ tData eval(ast a)
     r = eval(a->r);
 
     // v = CreateDoubleDT((ValueDT(l) == ValueDT(r)) ? 1 : 0);
-    v = CreateDoubleDT((CompareDT(l, r)) ? 1 : 0);
+    result = CreateDoubleDT((CompareDT(l, r)) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -801,7 +989,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT((ValueDT(l) >= ValueDT(r)) ? 1 : 0);
+    result = CreateDoubleDT((ValueDT(l) >= ValueDT(r)) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -821,7 +1009,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT((ValueDT(l) <= ValueDT(r)) ? 1 : 0);
+    result = CreateDoubleDT((ValueDT(l) <= ValueDT(r)) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -842,7 +1030,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT((ValueDT(l) && ValueDT(r)) ? 1 : 0);
+    result = CreateDoubleDT((ValueDT(l) && ValueDT(r)) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -861,7 +1049,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT((ValueDT(l) || ValueDT(r)) ? 1 : 0);
+    result = CreateDoubleDT((ValueDT(l) || ValueDT(r)) ? 1 : 0);
 
     FreeDT(&l);
     FreeDT(&r);
@@ -878,7 +1066,7 @@ tData eval(ast a)
       break;
     }
 
-    v = CreateDoubleDT(((!ValueDT(l)) ? 1 : 0));
+    result = CreateDoubleDT(((!ValueDT(l)) ? 1 : 0));
 
     FreeDT(&l);
     break;
@@ -892,7 +1080,7 @@ tData eval(ast a)
       if (a->tl)
       {
         l = eval(a->tl);
-        v = CopyDT(l);
+        result = CopyDT(l);
         FreeDT(&l);
       }
     }
@@ -901,14 +1089,14 @@ tData eval(ast a)
       if (a->el)
       {
         l = eval(a->el);
-        v = CopyDT(l);
+        result = CopyDT(l);
         FreeDT(&l);
       }
     }
     break;
     /* while/do */
-  case WHILEAST:             // TODO: comprobar tipos
-    v = CreateDoubleDT(0.0); /* a default value */
+  case WHILEAST:                  // TODO: comprobar tipos
+    result = CreateDoubleDT(0.0); /* a default value */
 
     if (a->tl)
     {
@@ -916,10 +1104,10 @@ tData eval(ast a)
 
       while (ValueDT(r) != 0)
       {
-        FreeDT(&v);
+        FreeDT(&result);
 
         l = eval(a->tl);
-        v = CopyDT(l);
+        result = CopyDT(l);
         FreeDT(&l);
 
         FreeDT(&r);
@@ -931,7 +1119,7 @@ tData eval(ast a)
     break; /* value of last statement is value of while/do */
 
   case FOREACHAST:
-    v = CreateDoubleDT(0.0); // valor por defecto
+    result = CreateDoubleDT(0.0); // valor por defecto
 
     l = eval(a->l);
 
@@ -994,26 +1182,26 @@ tData eval(ast a)
   case 'L':
     l = eval(a->l);
 
-    v = eval(a->r);
+    result = eval(a->r);
 
     FreeDT(&l);
     break;
 
   case FNCALLAST:
     l = callbuiltin(a);
-    v = CopyDT(l);
+    result = CopyDT(l);
     FreeDT(&l);
     break;
   case UFNCALLAST:
     l = calluser(a);
-    v = CopyDT(l);
+    result = CopyDT(l);
     FreeDT(&l);
     break;
   default:
     printf("internal error: bad node %c\n", a->nodetype);
   }
 
-  return v ? v : CreateDoubleDT(0.0);
+  return result ? result : CreateDoubleDT(0.0);
 }
 
 static tData callbuiltin(ast f)
@@ -1151,7 +1339,7 @@ static tData calluser(ast f)
 
 ast newelem(char *c)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -1165,7 +1353,7 @@ ast newelem(char *c)
 
 ast newexchange(struct symbol *s, ast l, ast r)
 {
-  ast a = malloc(sizeof(struct tAst));
+  ast a = (ast)malloc(sizeof(struct tAst));
 
   if (!a)
   {
@@ -1178,4 +1366,26 @@ ast newexchange(struct symbol *s, ast l, ast r)
   a->r = r;
   a->symvar = s;
   return a;
+}
+
+// Devuelve la cantidad de elementos de una symlist
+int _elementCountSL(struct symlist *sl)
+{
+  if (!sl)
+  {
+    return 0;
+  }
+
+  return 1 + _elementCountSL(sl->next);
+}
+
+// Devuelve la cantidad de elementos de una explist
+int _elementCountEL(ast explist)
+{
+  if (explist->nodetype != 'L')
+  {
+    return 1; // Ultimo elemento a la derecha
+  }
+
+  return 1 + _elementCountEL(explist->r);
 }

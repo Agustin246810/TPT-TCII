@@ -20,6 +20,7 @@ EXP ([Ee][-+]?[0-9]+)
 "/" |
 "=" |
 "#" |
+"%" |
 "," |
 ";" |
 ":" | // estaContenidoEn
@@ -41,6 +42,9 @@ EXP ([Ee][-+]?[0-9]+)
 "&&"                    { yylval.fn = ANDOP;              return LOGICOP; }
 "||"                    { yylval.fn = OROP;               return LOGICOP; }
 "!"                     { yylval.fn = NOTOP;              return NOT; }
+
+"<<"                    { return LARROW; }
+">>"                    { return RARROW; }
 
  /* literal element */
 "'"[a-zA-Z0-9]+         { yylval.c = yytext; return ELEM;} // La cadena se guarda junto con el '

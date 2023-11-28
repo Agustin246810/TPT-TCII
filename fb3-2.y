@@ -25,16 +25,15 @@ int yylex(void);
 %token IF ELSE WHILE LET FOREACH PUSH TO LARROW RARROW
 %right '='
 %left <fn> LOGICOP
+%left <fn> CMP
 %left <fn> SETOP
 %left '['
-%left ':'
-%left <fn> CMP
-%left POP
 %left '+' '-'
 %left '*' '/'
+%left IN ':'
+%left POP
 %nonassoc UMINUS
 %nonassoc <fn> NOT
-%left IN
 %token <c> ELEM
 %token <s> NAME
 %token <d> NUMBER

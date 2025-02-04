@@ -39,15 +39,10 @@
 #define UFNCALLAST 817
 #define FNCALLAST 818
 
-/* interface to the lexer */
-extern int yylineno; /* from lexer */
-void yyerror(char *s, ...);
-
 typedef struct tAst *ast;
 
 /* symbol table */
-struct symbol
-{ /* a variable name */
+struct symbol{ /* a variable name */
   char *name;
   tData value;
   ast func;             /* stmt for the function */

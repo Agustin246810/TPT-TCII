@@ -9,6 +9,7 @@
 #include "fb3-2.h"
 #include "TDataType.h"
 
+struct symbol symtab[NHASH];
 // Devuelve la cantidad de elementos de una symlist
 int _elementCountSL(struct symlist *sl);
 // Devuelve la cantidad de elementos de una explist (ast)

@@ -55,7 +55,7 @@ struct symbol
 };
 /* simple symtab of fixed size */
 #define NHASH 9997
-struct symbol symtab[NHASH];
+extern struct symbol symtab[NHASH];
 struct symbol *lookup(char *);
 /* list of symbols, for an argument list */
 struct symlist

@@ -3,7 +3,7 @@
 bison -d fb3-2.y
 flex fb3-2.l
 gcc fb3-2.tab.c lex.yy.c fb3-2func.c TDataType.c TString.c
-a.exe
+start /wait a.exe
 echo "Se ejecuto correctamente"
 del a.exe
 del fb3-2.tab.c

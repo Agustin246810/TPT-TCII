@@ -45,7 +45,7 @@ int yylex(void);
 %start calclist
 
 %%
-
+/* TODO: crear variable sintactica bloque */
 stmt
   : IF '(' exp ')' '{' list '}'                       { $$ = newflow(IFAST, $3, $6, NULL); }
   | IF '(' exp ')' '{' list '}' ELSE '{' list '}'     { $$ = newflow(IFAST, $3, $6, $10); }
@@ -62,12 +62,10 @@ stmt
 
 a = 1
 b = 2
-b = %a       (b = 1)  (2? lo libero? {deberia})
-b = 3        (a = 3)  (1? no se libera, se sobrescribe)
+b = %a
+b = 3
 c = 4
-d = 5
-d = %c       (d = 4)  (5? lo libero? {deberia})
-b = %c       (b = 4)  (3? lo libero? {no puedo} a tambien pasa a ser alias de c?)
+b = %c
 
 */
 

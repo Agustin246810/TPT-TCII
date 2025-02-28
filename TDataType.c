@@ -551,7 +551,7 @@ tData ElemDT(tData CL, int pos)
     return NULL;
   }
 
-  if (CL->nodeType == STR)
+  if (CL->nodeType != SET && CL->nodeType != LIST)
   {
     return NULL;
   }

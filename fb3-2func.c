@@ -923,6 +923,9 @@ tData eval(ast a)
 
     if (TypeDT(l) != DOUBLE || TypeDT(r) != DOUBLE)
     {
+      PrintDT(l);
+      PrintDT(r);
+
       printf("Multiplication error: at least one of the operands is not a number.\n");
 
       FreeDT(&l);
@@ -1379,6 +1382,21 @@ static tData callbuiltin(ast f)
 
     return CreateDoubleDT(result);
 
+  case B_iseven:
+    if (TypeDT(auxDT) != DOUBLE)
+    {
+      yyerror("The parameter must be a number.");
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    result = !(((int)ValueDT(auxDT)) % 2);
+
+    FreeDT(&auxDT);
+
+    return CreateDoubleDT(result);
+
   default:
     yyerror("Unknown built-in function %d", functype);
     return CreateDoubleDT(0.0);
@@ -1388,6 +1406,7 @@ static tData callbuiltin(ast f)
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, ast func)
 {
+  // TODO: liberar el tData creado en lookup
   if (name->syms)
     symlistfree(name->syms);
   if (name->func)
@@ -1402,8 +1421,10 @@ static tData calluser(ast f)
   struct symbol *fn = f->sym; /* function name */
   struct symlist *sl;         /* dummy arguments */
   ast args = f->l;            /* actual arguments */
-  double *oldval, *newval;    /* saved arg values */
-  double v;
+  // double *oldvalues, *newvalues;    /* saved arg values */
+  tData oldvalues, newvalues; /* saved arg values */
+  tData aux;
+  tData v;
   int nargs;
   int i;
 
@@ -1419,14 +1440,17 @@ static tData calluser(ast f)
   for (nargs = 0; sl; sl = sl->next)
     nargs++;
   /* prepare to save them */
-  oldval = (double *)malloc(nargs * sizeof(double));
-  newval = (double *)malloc(nargs * sizeof(double));
+  // oldvalues = (double *)malloc(nargs * sizeof(double));
+  // newvalues = (double *)malloc(nargs * sizeof(double));
+  oldvalues = CreateDT("[]");
+  newvalues = CreateDT("[]");
 
-  if (!oldval || !newval)
-  {
-    yyerror("Out of space in %s", fn->name);
-    return CreateDoubleDT(0.0);
-  }
+  // Con el tData lista en vez de array, ya no hace falta comprobar espacio
+  // if (!oldvalues || !newvalues)
+  // {
+  //   yyerror("Out of space in %s", fn->name);
+  //   return CreateDoubleDT(0.0);
+  // }
 
   /* evaluate the arguments */
   for (i = 0; i < nargs; i++)
@@ -1434,18 +1458,27 @@ static tData calluser(ast f)
     if (!args)
     {
       yyerror("too few args in call to %s", fn->name);
-      free(oldval);
-      free(newval);
+      FreeDT(&oldvalues);
+      FreeDT(&newvalues);
       return CreateDoubleDT(0.0);
     }
     if (args->nodetype == 'L')
     { /* if this is a list node */
-      newval[i] = ValueDT(eval(args->l));
+      // newvalues[i] = ValueDT(eval(args->l));
+      aux = eval(args->l);
+
+      Push(newvalues, aux);
+      FreeDT(&aux);
       args = args->r;
     }
     else
     { /* if it's the end of the list */
-      newval[i] = ValueDT(eval(args));
+      // newvalues[i] = ValueDT(eval(args));
+      aux = eval(args);
+
+      Push(newvalues, aux);
+      FreeDT(&aux);
+
       args = NULL;
     }
   }
@@ -1456,15 +1489,21 @@ static tData calluser(ast f)
   for (i = 0; i < nargs; i++)
   {
     struct symbol *s = sl->sym;
-    oldval[i] = ValueDT(s->value);
-    s->value = CreateDoubleDT(newval[i]);
+    // oldvalues[i] = ValueDT(s->value);
+    Push(oldvalues, s->value);
+
+    // s->value = CreateDoubleDT(newvalues[i]);
+    s->value = CopyDT(ElemDT(newvalues, i + 1));
+
     sl = sl->next;
   }
 
-  free(newval);
+  // free(newvalues);
+  FreeDT(&newvalues);
 
   /* evaluate the function */
-  v = ValueDT(eval(fn->func));
+  // v = ValueDT(eval(fn->func));
+  v = eval(fn->func);
 
   /* put the real values of the dummies back */
   sl = fn->syms;
@@ -1472,13 +1511,17 @@ static tData calluser(ast f)
   for (i = 0; i < nargs; i++)
   {
     struct symbol *s = sl->sym;
-    s->value = CreateDoubleDT(oldval[i]);
+
+    // s->value = CreateDoubleDT(oldvalues[i]);
+    s->value = CopyDT(ElemDT(oldvalues, i + 1));
+
     sl = sl->next;
   }
 
-  free(oldval);
+  // free(oldvalues);
+  FreeDT(&oldvalues);
 
-  return CreateDoubleDT(v);
+  return v;
 }
 
 ast newelem(char *c)

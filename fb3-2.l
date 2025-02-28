@@ -67,6 +67,7 @@ EXP ([Ee][-+]?[0-9]+)
 "print"                 { yylval.fn = B_print;  return FUNC; }
 "abs"                   { yylval.fn = B_abs;    return FUNC; }
 "size"                  { yylval.fn = B_size;   return FUNC; }
+"iseven"                { yylval.fn = B_iseven; return FUNC; }
 
  /* names */
 [a-zA-Z][a-zA-Z0-9]*    { yylval.s = lookup(yytext); return NAME; }

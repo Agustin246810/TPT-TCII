@@ -74,7 +74,8 @@ enum bifs
   B_log,
   B_print,
   B_abs,
-  B_size
+  B_size,
+  B_iseven
 };
 
 struct tAst

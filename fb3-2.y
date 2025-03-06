@@ -1,4 +1,3 @@
-/* calculator with AST */
 
 %{
 #include <stdio.h>
@@ -40,12 +39,10 @@ int yylex(void);
 %token <fn> FUNC
 %type <a> exp stmt list explist
 %type <sl> symlist 
-/* %type <sl> symlistAM */
 
 %start calclist
 
 %%
-/* TODO: crear variable sintactica bloque */
 stmt
   : IF '(' exp ')' '{' list '}'                       { $$ = newflow(IFAST, $3, $6, NULL); }
   | IF '(' exp ')' '{' list '}' ELSE '{' list '}'     { $$ = newflow(IFAST, $3, $6, $10); }
@@ -57,17 +54,6 @@ stmt
   | NAME '=' '%' NAME                                 { $$ = newaliasing($1, $4); } // ALIASING
   | exp                                               { $$ = $1; }
 ;
-
-/*
-
-a = 1
-b = 2
-b = %a
-b = 3
-c = 4
-b = %c
-
-*/
 
 list
   : /* nothing */                                     { $$ = NULL; }
@@ -118,12 +104,6 @@ symlist
   | NAME ',' symlist                                  { $$ = newsymlist($1, $3); }
 ;
 
-/* symlistAM
-  : NAME                                              { $$ = newsymlist($1, NULL, 0); }
-  | NAME ',' symlistAM                                { $$ = newsymlist($1, $3, 0); }
-  | '#' NAME                                          { $$ = newsymlist($2, NULL, 1); }
-  | '#' NAME ',' symlistAM                            { $$ = newsymlist($2, $4, 1); }
-; */
 
 calclist
   : /* nothing */

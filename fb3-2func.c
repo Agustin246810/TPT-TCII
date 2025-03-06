@@ -321,7 +321,6 @@ struct symlist *newsymlist(struct symbol *sym, struct symlist *next)
   }
   sl->sym = sym;
   sl->next = next;
-  // sl->isref = isRef;
   return sl;
 }
 
@@ -1139,7 +1138,7 @@ tData eval(ast a)
     /* control flow */
     /* null expressions allowed in the grammar, so check for them */
     /* if/then/else */
-  case IFAST: // TODO: comprobar tipos
+  case IFAST: 
     auxDT = eval(a->cond);
 
     if (TypeDT(auxDT) != DOUBLE)
@@ -1407,7 +1406,6 @@ static tData callbuiltin(ast f)
 /* define a function */
 void dodef(struct symbol *name, struct symlist *syms, ast func)
 {
-  // TODO: liberar el tData creado en lookup
   if (name->syms)
     symlistfree(name->syms);
   if (name->func)

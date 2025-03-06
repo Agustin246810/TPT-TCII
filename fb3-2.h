@@ -62,7 +62,6 @@ struct symlist
 {
   struct symbol *sym;
   struct symlist *next;
-  // int isref; // Para indicar si es ref o copia en Asignacion Multiple (0 o 1)
 };
 struct symlist *newsymlist(struct symbol *sym, struct symlist *next);
 void symlistfree(struct symlist *sl);

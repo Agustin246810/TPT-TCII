@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <math.h>
+#include <windows.h>
 #include "fb3-2.h"
 #include "TDataType.h"
 
@@ -1138,7 +1139,7 @@ tData eval(ast a)
     /* control flow */
     /* null expressions allowed in the grammar, so check for them */
     /* if/then/else */
-  case IFAST: 
+  case IFAST:
     auxDT = eval(a->cond);
 
     if (TypeDT(auxDT) != DOUBLE)
@@ -1394,6 +1395,54 @@ static tData callbuiltin(ast f)
     result = !(((int)ValueDT(auxDT)) % 2);
 
     FreeDT(&auxDT);
+
+    return CreateDoubleDT(result);
+
+  case B_random:
+    if (TypeDT(auxDT) != DOUBLE)
+    {
+      yyerror("The parameter must be a number.");
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    if ((int)ValueDT(auxDT) == 0)
+    {
+      yyerror("The parameter must be different from 0.");
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    result = rand() % ((int)ValueDT(auxDT));
+
+    FreeDT(&auxDT);
+
+    return CreateDoubleDT(result);
+
+  case B_sleep:
+    if (TypeDT(auxDT) != DOUBLE)
+    {
+      yyerror("The parameter must be a number.");
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    if ((int)ValueDT(auxDT) <= 0)
+    {
+      yyerror("The parameter must be greater than 0.");
+
+      FreeDT(&auxDT);
+      return CreateDoubleDT(0.0);
+    }
+
+    result = (int)ValueDT(auxDT);
+
+    FreeDT(&auxDT);
+
+    Sleep(result);
 
     return CreateDoubleDT(result);
 

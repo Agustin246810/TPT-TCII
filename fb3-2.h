@@ -74,7 +74,9 @@ enum bifs
   B_print,
   B_abs,
   B_size,
-  B_iseven
+  B_iseven,
+  B_random,
+  B_sleep
 };
 
 struct tAst
